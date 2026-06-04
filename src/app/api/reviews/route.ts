@@ -1,0 +1,59 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getSession } from '@/lib/auth';
+import { getReviewCycles, getReviewsForEmployee, getReviewsForReviewer, createCycle, submitReview, getReviewsByCycle } from '@/lib/reviews';
+import { db } from '@/data/mock-db';
+
+export async function GET(req: NextRequest) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  const { searchParams } = new URL(req.url);
+  const view = searchParams.get('view') ?? 'mine';
+  if (view === 'cycles') {
+    const cycles = getReviewCycles().map((c) => ({
+      ...c,
+      reviews: getReviewsByCycle(c.id),
+    }));
+    return NextResponse.json({ success: true, data: cycles });
+  }
+  if (view === 'reviewer') {
+    const reviews = getReviewsForReviewer(session.employeeId).map((r) => ({
+      ...r,
+      employee: db.getEmployeeById(r.employeeId),
+    }));
+    return NextResponse.json({ success: true, data: reviews });
+  }
+  const reviews = getReviewsForEmployee(session.employeeId).map((r) => ({
+    ...r,
+    reviewer: db.getEmployeeById(r.reviewerId),
+  }));
+  return NextResponse.json({ success: true, data: reviews });
+}
+
+export async function POST(req: NextRequest) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  const body = await req.json();
+  if (body.action === 'create-cycle') {
+    if (!['HR Admin', 'Super Admin'].includes(session.role)) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
+    const cycle = createCycle({
+      name: body.name,
+      period: body.period,
+      employeeIds: body.employeeIds,
+      createdBy: session.employeeId,
+    });
+    return NextResponse.json({ success: true, data: cycle });
+  }
+  if (body.action === 'submit-review') {
+    const result = submitReview(body.reviewId, {
+      ratings: body.ratings,
+      strengths: body.strengths,
+      areasOfImprovement: body.areasOfImprovement,
+      goals: body.goals,
+      comment: body.comment,
+    });
+    return NextResponse.json({ success: !!result, data: result });
+  }
+  return NextResponse.json({ success: false, error: 'Unknown action' }, { status: 400 });
+}
