@@ -154,13 +154,13 @@ export default function SignupPage() {
 
         <p className="text-xs text-[color:var(--muted-foreground)] text-center mt-4 leading-relaxed">
           By creating an account you agree to our{' '}
-          <span className="underline cursor-pointer" style={{ color: 'var(--primary)' }}>
+          <Link href="/terms" className="underline" style={{ color: 'var(--primary)' }}>
             Terms of Service
-          </span>{' '}
+          </Link>{' '}
           and{' '}
-          <span className="underline cursor-pointer" style={{ color: 'var(--primary)' }}>
+          <Link href="/privacy-policy" className="underline" style={{ color: 'var(--primary)' }}>
             Privacy Policy
-          </span>
+          </Link>
           .
         </p>
 

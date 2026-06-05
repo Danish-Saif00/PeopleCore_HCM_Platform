@@ -18,9 +18,10 @@ export function MarketingNav() {
 
   const links = [
     { href: '#features', label: 'Features' },
+    { href: '#how-it-works', label: 'How It Works' },
     { href: '#pricing', label: 'Pricing' },
     { href: '#customers', label: 'Customers' },
-    { href: '#blog', label: 'Blog' },
+    { href: '#faq', label: 'FAQ' },
   ];
 
   return (
@@ -43,7 +44,7 @@ export function MarketingNav() {
             <Link
               key={link.href}
               href={link.href}
-              className="text-sm text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] transition-colors"
+              className="text-sm text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] transition-colors marketing-nav-link"
             >
               {link.label}
             </Link>
