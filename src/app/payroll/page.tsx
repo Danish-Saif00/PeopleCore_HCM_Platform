@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/auth-context';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { DollarSign, Users, Play, FileText, Download } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { SkeletonCard } from '@/components/ui/skeleton';
 import type { PayrollRun, Payslip } from '@/types/peoplecore';
 
 const STATUSES = ['All', 'Completed', 'Pending', 'Processing', 'Failed'];
@@ -234,17 +235,10 @@ export default function PayrollPage() {
           <div className="space-y-4">
             <h3 className="text-sm font-semibold">Generated Payslips</h3>
             {slipsLoading ? (
-              <div className="flex justify-center py-10">
-                <div
-                  className="w-6 h-6 rounded-full border-t-transparent"
-                  style={{
-                    animation: 'spin 0.6s linear infinite',
-                    borderWidth: 2,
-                    borderStyle: 'solid',
-                    borderColor: 'var(--primary)',
-                    borderTopColor: 'transparent',
-                  }}
-                />
+              <div className="space-y-2" role="status" aria-label="Loading generated payslips">
+                <SkeletonCard className="p-3" />
+                <SkeletonCard className="p-3" />
+                <SkeletonCard className="p-3" />
               </div>
             ) : payslips.length === 0 ? (
               <p className="text-sm text-[color:var(--muted-foreground)]">

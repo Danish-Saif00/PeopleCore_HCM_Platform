@@ -1,5 +1,5 @@
 'use client';
-import React, { type ReactNode, useEffect } from 'react';
+import React, { type ReactNode, useEffect, useId, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
 
@@ -22,6 +22,23 @@ export function SidePanel({
   footer,
   className,
 }: SidePanelProps) {
+  const titleId = useId();
+  const subtitleId = useId();
+  const [mounted, setMounted] = useState(open);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+      const frame = requestAnimationFrame(() => setVisible(true));
+      return () => cancelAnimationFrame(frame);
+    }
+
+    setVisible(false);
+    const timeout = window.setTimeout(() => setMounted(false), 420);
+    return () => window.clearTimeout(timeout);
+  }, [open]);
+
   useEffect(() => {
     if (open) {
       document.body.style.overflow = 'hidden';
@@ -33,26 +50,39 @@ export function SidePanel({
     };
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [open, onClose]);
+
+  if (!mounted) return null;
+
   return (
     <>
-      {open && (
-        <div className="pc-side-panel-overlay" onClick={onClose} />
-      )}
+      <div className={cn('pc-side-panel-overlay', visible && 'open')} onClick={onClose} />
       <div
-        className={cn('pc-side-panel', open ? 'translate-x-0' : 'translate-x-full', className)}
-        style={{ display: open ? 'flex' : 'none' }}
+        className={cn('pc-side-panel', visible && 'open', className)}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={subtitle ? subtitleId : undefined}
       >
         {/* Header */}
         <div className="pc-side-panel-header">
           <div>
-            <h2 className="text-base font-bold text-[color:var(--foreground)]">{title}</h2>
+            <h2 id={titleId} className="text-base font-bold text-[color:var(--foreground)]">{title}</h2>
             {subtitle && (
-              <p className="text-xs text-[color:var(--muted-foreground)] mt-0.5">{subtitle}</p>
+              <p id={subtitleId} className="text-xs text-[color:var(--muted-foreground)] mt-0.5">{subtitle}</p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[color:var(--muted)] text-[color:var(--muted-foreground)] transition-colors"
+            className="w-10 h-10 rounded-lg flex items-center justify-center hover:bg-[color:var(--muted)] text-[color:var(--muted-foreground)] transition-colors"
+            aria-label={`Close ${title}`}
           >
             <X size={16} />
           </button>

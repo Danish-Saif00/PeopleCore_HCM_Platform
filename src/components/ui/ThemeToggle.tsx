@@ -12,22 +12,19 @@ export function ThemeToggle({ className }: { className?: string }) {
     const savedTheme = localStorage.getItem('pc_theme') as 'light' | 'dark' | null;
     const initialTheme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     setTheme(initialTheme);
+    document.documentElement.classList.toggle('dark', initialTheme === 'dark');
   }, []);
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
     localStorage.setItem('pc_theme', newTheme);
-    if (newTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    document.documentElement.classList.toggle('dark', newTheme === 'dark');
   };
 
   if (!mounted) {
     return (
-      <div className={cn("w-9 h-9 flex items-center justify-center rounded-lg bg-transparent text-[color:var(--muted-foreground)]", className)}>
+      <div className={cn("theme-toggle", className)}>
         <Sun size={18} className="opacity-0" />
       </div>
     );
@@ -37,7 +34,7 @@ export function ThemeToggle({ className }: { className?: string }) {
     <button
       onClick={toggleTheme}
       className={cn(
-        "w-9 h-9 flex items-center justify-center rounded-lg hover:bg-[color:var(--muted)] text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] transition-all duration-200 hover:scale-105 active:scale-95",
+        "theme-toggle",
         className
       )}
       aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}

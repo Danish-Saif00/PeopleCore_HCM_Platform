@@ -43,4 +43,7 @@ next-env.d.ts
 #Misc
 AGENTS.md
 CLAUDE.md
+PLAN.md
 docs/
+_analysis/
+.vscode/

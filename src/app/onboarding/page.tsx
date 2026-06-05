@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/auth-context';
 import { formatDate } from '@/lib/formatters';
 import { Clipboard, Plus, CheckCircle, Clock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { SkeletonCard, SkeletonCardGrid } from '@/components/ui/skeleton';
 
 export default function OnboardingPage() {
   const { session, loading } = useAuth();
@@ -143,17 +144,10 @@ export default function OnboardingPage() {
       {!isHR && (
         <div className="space-y-6">
           {dataLoading ? (
-            <div className="flex justify-center py-10">
-              <div
-                className="w-6 h-6 rounded-full border-t-transparent"
-                style={{
-                  animation: 'spin 0.6s linear infinite',
-                  borderWidth: 2,
-                  borderStyle: 'solid',
-                  borderColor: 'var(--primary)',
-                  borderTopColor: 'transparent',
-                }}
-              />
+            <div className="space-y-4" role="status" aria-label="Loading onboarding checklist">
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
             </div>
           ) : !myOnboarding ? (
             <div className="pc-card p-10 text-center text-[color:var(--muted-foreground)]">
@@ -287,18 +281,7 @@ export default function OnboardingPage() {
       {isHR && activeTab === 'templates' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {dataLoading ? (
-            <div className="col-span-full flex justify-center py-10">
-              <div
-                className="w-6 h-6 rounded-full border-t-transparent"
-                style={{
-                  animation: 'spin 0.6s linear infinite',
-                  borderWidth: 2,
-                  borderStyle: 'solid',
-                  borderColor: 'var(--primary)',
-                  borderTopColor: 'transparent',
-                }}
-              />
-            </div>
+            <SkeletonCardGrid count={4} className="col-span-full md:grid-cols-2" />
           ) : templates.length === 0 ? (
             <div className="col-span-full pc-card p-10 text-center text-[color:var(--muted-foreground)]">
               No onboarding templates created yet.

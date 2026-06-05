@@ -1,5 +1,5 @@
 'use client';
-import React, { type ReactNode, useEffect } from 'react';
+import React, { type ReactNode, useEffect, useId, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
 
@@ -24,12 +24,29 @@ export function Modal({
   className,
   size = 'md',
 }: ModalProps) {
+  const titleId = useId();
+  const subtitleId = useId();
+  const [mounted, setMounted] = useState(open);
+  const [visible, setVisible] = useState(false);
   const sizeClasses = {
     sm: 'max-w-[400px]',
     md: 'max-w-[520px]',
     lg: 'max-w-[700px]',
     xl: 'max-w-[1000px]',
   }[size];
+
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+      const frame = requestAnimationFrame(() => setVisible(true));
+      return () => cancelAnimationFrame(frame);
+    }
+
+    setVisible(false);
+    const timeout = window.setTimeout(() => setMounted(false), 420);
+    return () => window.clearTimeout(timeout);
+  }, [open]);
+
   useEffect(() => {
     if (open) {
       document.body.style.overflow = 'hidden';
@@ -41,25 +58,39 @@ export function Modal({
     };
   }, [open]);
 
-  if (!open) return null;
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [open, onClose]);
+
+  if (!mounted) return null;
 
   return (
-    <div className="pc-modal-overlay" onClick={onClose}>
+    <div className={cn('pc-modal-overlay', visible && 'open')} onClick={onClose}>
       <div
-        className={cn('pc-modal', sizeClasses, className)}
+        className={cn('pc-modal', visible && 'open', sizeClasses, className)}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={subtitle ? subtitleId : undefined}
       >
         {/* Header */}
         <div className="pc-modal-header">
           <div>
-            <h2 className="text-lg font-bold text-[color:var(--foreground)]">{title}</h2>
+            <h2 id={titleId} className="text-lg font-bold text-[color:var(--foreground)]">{title}</h2>
             {subtitle && (
-              <p className="text-xs text-[color:var(--muted-foreground)] mt-0.5">{subtitle}</p>
+              <p id={subtitleId} className="text-xs text-[color:var(--muted-foreground)] mt-0.5">{subtitle}</p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[color:var(--muted)] text-[color:var(--muted-foreground)] transition-colors"
+            className="w-10 h-10 rounded-lg flex items-center justify-center hover:bg-[color:var(--muted)] text-[color:var(--muted-foreground)] transition-colors"
+            aria-label={`Close ${title}`}
           >
             <X size={16} />
           </button>

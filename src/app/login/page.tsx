@@ -74,7 +74,7 @@ export default function LoginPage() {
               'radial-gradient(circle at 30% 70%, rgba(24,166,109,0.2) 0%, transparent 60%), radial-gradient(circle at 80% 20%, rgba(47,128,237,0.1) 0%, transparent 50%)',
           }}
         />
-        <div className="relative z-10 flex flex-col p-12 justify-between w-full">
+        <div className="relative z-10 flex flex-col p-12 justify-between w-full motion-fade-in">
           <div className="flex items-center gap-3">
             <Logo variant="dark-horizontal-short" size="md" priority />
           </div>
@@ -112,7 +112,7 @@ export default function LoginPage() {
 
       {/* Right panel - form */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-md motion-slide-up">
           {/* Mobile logo */}
           <div className="mb-8 flex items-center lg:hidden">
             <Link href="/" aria-label="PeopleCore home">

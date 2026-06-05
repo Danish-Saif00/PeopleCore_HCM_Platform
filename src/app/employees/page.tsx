@@ -178,15 +178,15 @@ export default function EmployeesPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-5">
-        <div className="relative flex-1 min-w-[200px]">
+        <div className="pc-search-field flex-1 min-w-[200px]">
           <Search
             size={14}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--muted-foreground)]"
+            className="pc-search-icon"
           />
           <input
             type="search"
             placeholder="Search employees..."
-            className="pc-input pl-9 h-9 text-sm w-full"
+            className="pc-input pc-search-input h-9 text-sm w-full"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             id="employee-search"

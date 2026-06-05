@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
+import { PageTransition } from '@/components/ui/PageTransition';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -21,11 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               try {
                 const savedTheme = localStorage.getItem('pc_theme');
                 const initialTheme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-                if (initialTheme === 'dark') {
-                  document.documentElement.classList.add('dark');
-                } else {
-                  document.documentElement.classList.remove('dark');
-                }
+                document.documentElement.classList.toggle('dark', initialTheme === 'dark');
               } catch (e) {}
             `,
           }}
@@ -33,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen bg-[color:var(--background)]">
         <AuthProvider>
-          {children}
+          <PageTransition>{children}</PageTransition>
         </AuthProvider>
       </body>
     </html>

@@ -6,6 +6,7 @@ import { StatCard } from '@/components/ui/StatCard';
 import { StatusBadge } from '@/components/ui/Badge';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SkeletonCardGrid, SkeletonStatGrid } from '@/components/ui/skeleton';
 import { useAuth } from '@/lib/auth-context';
 import { formatCurrency, formatDate, formatRelativeTime } from '@/lib/formatters';
 import {
@@ -106,17 +107,9 @@ export default function DashboardPage() {
       />
 
       {dataLoading ? (
-        <div className="flex items-center justify-center py-20">
-          <div
-            className="w-8 h-8 rounded-full border-t-transparent"
-            style={{
-              animation: 'spin 0.6s linear infinite',
-              borderWidth: 3,
-              borderStyle: 'solid',
-              borderColor: 'var(--primary)',
-              borderTopColor: 'transparent',
-            }}
-          />
+        <div className="space-y-6" role="status" aria-label="Loading dashboard">
+          <SkeletonStatGrid />
+          <SkeletonCardGrid count={3} className="lg:grid-cols-3" />
         </div>
       ) : (
         <div className="space-y-6">
@@ -218,29 +211,47 @@ export default function DashboardPage() {
             <div className="lg:col-span-2 pc-card">
               <div className="p-5 border-b border-[color:var(--border)] flex items-center justify-between">
                 <h2 className="card-title">Recent Activity</h2>
-                <span className="text-xs text-[color:var(--muted-foreground)]">{notifications.length} total</span>
+                <span className="text-xs text-[color:var(--muted-foreground)]">{notifications.length} events</span>
               </div>
               <div className="divide-y divide-[color:var(--border)]">
                 {notifications.slice(0, 6).length === 0 ? (
                   <EmptyState title="No activity yet" description="Actions will appear here." />
                 ) : (
-                  notifications.slice(0, 6).map((n) => (
-                    <div
-                      key={n.id}
-                      className="flex items-start gap-3 p-4"
-                      style={{ background: !n.read ? 'var(--primary-soft)' : undefined }}
-                    >
-                      <span
-                        className="w-2 h-2 rounded-full mt-2 flex-shrink-0"
-                        style={{ background: n.read ? 'var(--border)' : 'var(--primary)' }}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">{n.title}</p>
-                        <p className="text-xs text-[color:var(--muted-foreground)] mt-0.5">{n.message}</p>
-                        <p className="text-xs text-[color:var(--muted-foreground)] mt-1">{formatRelativeTime(n.createdAt)}</p>
+                  notifications.slice(0, 6).map((n) => {
+                    const typeConfig: Record<string, { bg: string; color: string; icon: React.ReactNode }> = {
+                      Payroll: { bg: 'var(--warning-soft)', color: 'var(--warning)', icon: <DollarSign size={14} /> },
+                      'Time Off': { bg: 'var(--primary-soft)', color: 'var(--primary)', icon: <Calendar size={14} /> },
+                      Reviews: { bg: 'rgba(155,81,224,0.12)', color: 'var(--chart-4)', icon: <Star size={14} /> },
+                      Onboarding: { bg: 'var(--success-soft)', color: 'var(--success)', icon: <CheckSquare size={14} /> },
+                    };
+                    const cfg = typeConfig[n.type] ?? { bg: 'var(--muted)', color: 'var(--muted-foreground)', icon: <AlertCircle size={14} /> };
+                    return (
+                      <div
+                        key={n.id}
+                        className="flex items-start gap-3 p-4 hover:bg-[color:var(--muted)]/50 transition-colors"
+                      >
+                        <span
+                          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                          style={{ background: cfg.bg, color: cfg.color }}
+                        >
+                          {cfg.icon}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="text-sm font-medium text-[color:var(--foreground)]">{n.title}</p>
+                            {!n.read && (
+                              <span className="w-2 h-2 rounded-full flex-shrink-0 mt-1.5" style={{ background: 'var(--primary)' }} />
+                            )}
+                          </div>
+                          <p className="text-xs text-[color:var(--muted-foreground)] mt-0.5">{n.message}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs" style={{ color: cfg.color }}>{n.type}</span>
+                            <span className="text-xs text-[color:var(--muted-foreground)]">· {formatRelativeTime(n.createdAt)}</span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>

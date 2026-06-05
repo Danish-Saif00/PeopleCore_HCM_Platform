@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/auth-context';
 import { formatDate } from '@/lib/formatters';
 import { Users, Clock, Mail, Phone, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { SkeletonCardGrid } from '@/components/ui/skeleton';
 import type { Employee, TimeOffRequest } from '@/types/peoplecore';
 
 export default function TeamPage() {
@@ -102,18 +103,7 @@ export default function TeamPage() {
       {activeTab === 'roster' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {dataLoading ? (
-            <div className="col-span-full flex justify-center py-10">
-              <div
-                className="w-6 h-6 rounded-full border-t-transparent"
-                style={{
-                  animation: 'spin 0.6s linear infinite',
-                  borderWidth: 2,
-                  borderStyle: 'solid',
-                  borderColor: 'var(--primary)',
-                  borderTopColor: 'transparent',
-                }}
-              />
-            </div>
+            <SkeletonCardGrid count={3} className="col-span-full" />
           ) : teamMembers.length === 0 ? (
             <div className="col-span-full pc-card p-8 text-center text-[color:var(--muted-foreground)]">
               No direct reports found under your management.

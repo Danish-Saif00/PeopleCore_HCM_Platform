@@ -40,7 +40,7 @@ export default function InvitePage() {
       className="min-h-screen flex items-center justify-center px-4 py-12"
       style={{ background: 'var(--background)' }}
     >
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md motion-slide-up">
         <div className="mb-8 flex items-center">
           <Link href="/" aria-label="PeopleCore home">
             <Logo variant="light-horizontal-short" size="sm" priority />

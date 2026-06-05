@@ -6,6 +6,7 @@ import { OrgChartD3 } from '@/components/charts/OrgChartD3';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import type { Employee } from '@/types/peoplecore';
+import { Skeleton, SkeletonCardGrid } from '@/components/ui/skeleton';
 
 export default function OrgChartPage() {
   const { session, loading } = useAuth();
@@ -64,17 +65,12 @@ export default function OrgChartPage() {
 
       <div className="pc-card overflow-hidden" style={{ minHeight: '600px' }}>
         {dataLoading ? (
-          <div className="flex items-center justify-center py-32">
-            <div
-              className="w-8 h-8 rounded-full border-t-transparent"
-              style={{
-                animation: 'spin 0.6s linear infinite',
-                borderWidth: 3,
-                borderStyle: 'solid',
-                borderColor: 'var(--primary)',
-                borderTopColor: 'transparent',
-              }}
-            />
+          <div className="p-6 space-y-8" role="status" aria-label="Loading organization chart">
+            <div className="flex justify-center">
+              <Skeleton className="h-24 w-56" rounded="lg" />
+            </div>
+            <Skeleton className="h-8 w-px mx-auto" />
+            <SkeletonCardGrid count={3} />
           </div>
         ) : (
           <OrgChartD3 employees={employees} />

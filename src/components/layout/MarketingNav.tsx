@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { Logo } from '@/components/ui/Logo';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 export function MarketingNav() {
   const [scrolled, setScrolled] = useState(false);
@@ -33,7 +33,8 @@ export function MarketingNav() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center gap-8">
         <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
-          <Logo variant="light-horizontal-long" size="sm" priority />
+          <Logo variant="light-horizontal-long" size="md" priority className="theme-logo-light" />
+          <Logo variant="dark-horizontal-long" size="md" priority className="theme-logo-dark" />
         </Link>
 
         {/* Desktop nav */}
@@ -59,7 +60,7 @@ export function MarketingNav() {
         <div className="flex items-center gap-2 md:hidden ml-auto">
           <ThemeToggle />
           <button
-            className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-[color:var(--muted)] text-[color:var(--foreground)]"
+            className="w-12 h-12 flex items-center justify-center rounded-lg hover:bg-[color:var(--muted)] text-[color:var(--foreground)]"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
           >

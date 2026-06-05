@@ -3,7 +3,7 @@ import React, { type ReactNode } from 'react';
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { SkeletonMobileList, SkeletonTable } from '@/components/ui/skeleton';
 
 interface Column<T> {
   key: string;
@@ -46,8 +46,10 @@ export function DataTable<T extends Record<string, unknown>>({
 }: DataTableProps<T>) {
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <LoadingSpinner size="lg" className="text-[color:var(--primary)]" />
+      <div role="status" aria-busy="true" aria-label="Loading table data">
+        <span className="sr-only">Loading table data</span>
+        <SkeletonTable columns={Math.max(columns.length, 1)} />
+        <SkeletonMobileList />
       </div>
     );
   }
@@ -64,7 +66,7 @@ export function DataTable<T extends Record<string, unknown>>({
   }
 
   return (
-    <>
+    <div aria-busy="false">
       {/* Desktop Table */}
       <div className="hidden md:block overflow-x-auto">
         <table className="pc-table">
@@ -122,7 +124,7 @@ export function DataTable<T extends Record<string, unknown>>({
             <div
               key={String(row[keyField] ?? idx)}
               className={cn(
-                'pc-card p-4',
+                'pc-card p-4 transition-colors',
                 onRowClick && 'cursor-pointer active:opacity-80'
               )}
               onClick={() => onRowClick?.(row)}
@@ -151,6 +153,6 @@ export function DataTable<T extends Record<string, unknown>>({
           );
         })}
       </div>
-    </>
+    </div>
   );
 }

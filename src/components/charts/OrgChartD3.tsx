@@ -355,15 +355,15 @@ export function OrgChartD3({ employees }: OrgChartD3Props) {
     <div className="flex flex-col h-full" style={{ minHeight: '500px' }}>
       {/* Toolbar */}
       <div className="flex items-center gap-3 p-4 border-b border-[color:var(--border)] bg-[color:var(--card)] flex-wrap">
-        <div className="relative flex-1 min-w-[200px]">
+        <div className="pc-search-field flex-1 min-w-[200px]">
           <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--muted-foreground)]"
+            className="pc-search-icon"
             size={14}
           />
           <input
             type="search"
             placeholder="Search employees..."
-            className="pc-input pl-9 h-9 text-sm"
+            className="pc-input pc-search-input h-9 text-sm"
             id="org-chart-search"
             value={search}
             onChange={(e) => handleSearch(e.target.value)}

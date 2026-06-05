@@ -98,7 +98,7 @@ export default function VerifyEmailPage() {
         className="min-h-screen flex items-center justify-center"
         style={{ background: 'var(--background)' }}
       >
-        <div className="text-center">
+        <div className="text-center motion-slide-up">
           <div
             className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
             style={{ background: 'var(--success-soft)' }}
@@ -121,7 +121,7 @@ export default function VerifyEmailPage() {
       className="min-h-screen flex items-center justify-center px-4"
       style={{ background: 'var(--background)' }}
     >
-      <div className="w-full max-w-md text-center">
+      <div className="w-full max-w-md text-center motion-slide-up">
         <Link href="/" aria-label="PeopleCore home" className="mb-8 inline-flex">
           <Logo variant="light-vertical-short" size="sm" priority />
         </Link>
