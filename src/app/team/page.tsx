@@ -68,7 +68,7 @@ export default function TeamPage() {
           <div
             className="w-8 h-8 rounded-full border-t-transparent"
             style={{
-              animation: 'spin 0.6s linear infinite',
+              animation: 'spin var(--motion-loading-spin) linear infinite',
               borderWidth: 3,
               borderStyle: 'solid',
               borderColor: 'var(--primary)',
@@ -112,7 +112,7 @@ export default function TeamPage() {
             teamMembers.map((emp) => (
               <div key={emp.id} className="pc-card p-5 space-y-4">
                 <div className="flex items-center gap-3">
-                  <Avatar name={emp.fullName} size="md" />
+                  <Avatar name={emp.fullName} avatarUrl={emp.avatarUrl} size="md" />
                   <div>
                     <h3 className="font-semibold text-base">{emp.fullName}</h3>
                     <p className="text-xs text-[color:var(--muted-foreground)]">{emp.jobTitle}</p>
@@ -151,7 +151,11 @@ export default function TeamPage() {
                   const emp = teamMembers.find((e) => e.id === row.employeeId);
                   return (
                     <div className="flex items-center gap-2">
-                      <Avatar name={emp?.fullName ?? 'Employee'} size="sm" />
+                      <Avatar
+                        name={emp?.fullName ?? 'Employee'}
+                        avatarUrl={emp?.avatarUrl}
+                        size="sm"
+                      />
                       <span className="font-medium">{emp?.fullName ?? 'Employee'}</span>
                     </div>
                   );

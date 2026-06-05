@@ -1,10 +1,21 @@
 import { db, generateId } from '@/data/mock-db';
 import type { AuthSession, Role } from '@/types/peoplecore';
 import { cookies } from 'next/headers';
+import { getProfileImageUrl } from '@/lib/profile-image';
 
 const SESSION_COOKIE = 'pc_session';
 const SESSION_DURATION_MS = 8 * 60 * 60 * 1000; // 8 hours
 const MAX_FAILED_ATTEMPTS = 5;
+
+function enrichSession(session: AuthSession): AuthSession {
+  const employee = db.getEmployeeById(session.employeeId);
+
+  return {
+    ...session,
+    fullName: employee?.fullName,
+    avatarUrl: employee?.avatarUrl,
+  };
+}
 
 export interface LoginResult {
   success: boolean;
@@ -47,14 +58,14 @@ export async function login(email: string, password: string): Promise<LoginResul
   // Reset failed attempts on success
   db.updateAuthUser(authUser.id, { failedLoginAttempts: 0 });
   const now = new Date();
-  const session: AuthSession = {
+  const session = enrichSession({
     userId: authUser.id,
     employeeId: authUser.employeeId,
     email: authUser.email,
     role: authUser.role,
     expiresAt: new Date(now.getTime() + SESSION_DURATION_MS).toISOString(),
     lastActivity: now.toISOString(),
-  };
+  });
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, JSON.stringify(session), {
     httpOnly: true,
@@ -80,22 +91,22 @@ export async function getSession(): Promise<AuthSession | null> {
       cookieStore.delete(SESSION_COOKIE);
       return null;
     }
-    return session;
+    return enrichSession(session);
   } catch {
     return null;
   }
 }
 
-export async function refreshSession(): Promise<void> {
+export async function refreshSession(): Promise<AuthSession | null> {
   try {
     const session = await getSession();
-    if (!session) return;
+    if (!session) return null;
     const now = new Date();
-    const updated: AuthSession = {
+    const updated = enrichSession({
       ...session,
       lastActivity: now.toISOString(),
       expiresAt: new Date(now.getTime() + SESSION_DURATION_MS).toISOString(),
-    };
+    });
     const cookieStore = await cookies();
     cookieStore.set(SESSION_COOKIE, JSON.stringify(updated), {
       httpOnly: true,
@@ -103,8 +114,9 @@ export async function refreshSession(): Promise<void> {
       maxAge: SESSION_DURATION_MS / 1000,
       path: '/',
     });
+    return updated;
   } catch {
-    // ignore
+    return null;
   }
 }
 
@@ -120,14 +132,16 @@ export async function signup(
   const employeeId = generateId('emp');
   const userId = generateId('auth');
   const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+  const fullName = email
+    .split('@')[0]
+    .replace(/[._-]/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+
   db.addEmployee({
     id: employeeId,
     companyId: 'company_001',
     managerId: null,
-    fullName: email
-      .split('@')[0]
-      .replace(/[._-]/g, ' ')
-      .replace(/\b\w/g, (c) => c.toUpperCase()),
+    fullName,
     email,
     phone: '',
     department: 'General',
@@ -136,7 +150,7 @@ export async function signup(
     startDate: new Date().toISOString().split('T')[0],
     status: 'Active',
     employmentType: 'Full-time',
-    avatarUrl: '',
+    avatarUrl: getProfileImageUrl(employeeId),
     baseSalary: 0,
     role: 'Employee',
   });

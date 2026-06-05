@@ -8,11 +8,12 @@ import { Button } from '@/components/ui/Button';
 import { Tabs } from '@/components/ui/Tabs';
 import { RequestTimeOffModal } from '@/components/modals/RequestTimeOffModal';
 import { TimeOffRequestSidePanel } from '@/components/side-panels/TimeOffRequestSidePanel';
+import { TimeOffCalendar } from '@/components/cards/TimeOffCalendar';
 import { useAuth } from '@/lib/auth-context';
 import { formatDate, countWorkingDays } from '@/lib/formatters';
 import { Plus, Calendar, Clock, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import type { TimeOffRequest } from '@/types/peoplecore';
+import type { Employee, TimeOffRequest } from '@/types/peoplecore';
 
 const TYPE_FILTER_OPTIONS = [
   { value: 'all', label: 'All Types' },
@@ -33,7 +34,10 @@ export default function TimeOffPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'mine' | 'team'>('mine');
   const [requests, setRequests] = useState<TimeOffRequest[]>([]);
+  const [calendarRequests, setCalendarRequests] = useState<TimeOffRequest[]>([]);
+  const [calendarEmployees, setCalendarEmployees] = useState<Employee[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  const [calendarLoading, setCalendarLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showRequestModal, setShowRequestModal] = useState(false);
@@ -67,6 +71,34 @@ export default function TimeOffPage() {
       fetchRequests();
     }
   }, [session, fetchRequests]);
+
+  const fetchCalendarData = useCallback(async () => {
+    setCalendarLoading(true);
+    try {
+      const [requestsResponse, employeesResponse] = await Promise.all([
+        fetch('/api/time-off?view=all&status=Approved'),
+        fetch('/api/employees'),
+      ]);
+      const [requestsJson, employeesJson] = await Promise.all([
+        requestsResponse.json(),
+        employeesResponse.json(),
+      ]);
+      if (requestsJson.success) setCalendarRequests(requestsJson.data);
+      if (employeesJson.success) setCalendarEmployees(employeesJson.data);
+    } catch (err) {
+      console.error('Failed to fetch time-off calendar data:', err);
+    } finally {
+      setCalendarLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (session) fetchCalendarData();
+  }, [session, fetchCalendarData]);
+
+  const refreshTimeOffData = useCallback(async () => {
+    await Promise.all([fetchRequests(), fetchCalendarData()]);
+  }, [fetchRequests, fetchCalendarData]);
 
   const columns = [
     {
@@ -120,7 +152,7 @@ export default function TimeOffPage() {
           <div
             className="w-8 h-8 rounded-full border-t-transparent"
             style={{
-              animation: 'spin 0.6s linear infinite',
+              animation: 'spin var(--motion-loading-spin) linear infinite',
               borderWidth: 3,
               borderStyle: 'solid',
               borderColor: 'var(--primary)',
@@ -203,11 +235,19 @@ export default function TimeOffPage() {
         />
       </div>
 
+      <div className="mt-6">
+        <TimeOffCalendar
+          requests={calendarRequests}
+          employees={calendarEmployees}
+          loading={calendarLoading}
+        />
+      </div>
+
       {/* Request leave modal */}
       <RequestTimeOffModal
         open={showRequestModal}
         onClose={() => setShowRequestModal(false)}
-        onSuccess={fetchRequests}
+        onSuccess={refreshTimeOffData}
       />
 
       {/* Detail panel */}
@@ -217,8 +257,8 @@ export default function TimeOffPage() {
         open={!!selectedRequest}
         onClose={() => setSelectedRequest(null)}
         canApprove={activeTab === 'team' && isManagerOrAdmin}
-        onApprove={fetchRequests}
-        onReject={fetchRequests}
+        onApprove={refreshTimeOffData}
+        onReject={refreshTimeOffData}
       />
     </AppShell>
   );

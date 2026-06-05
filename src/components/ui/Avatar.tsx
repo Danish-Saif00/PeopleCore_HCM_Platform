@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { getInitials } from '@/lib/formatters';
 
@@ -12,6 +12,11 @@ interface AvatarProps {
 
 export function Avatar({ name = '', avatarUrl, size = 'md', className }: AvatarProps) {
   const initials = getInitials(name);
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [avatarUrl]);
 
   const sizeClass = {
     sm: 'w-8 h-8 text-xs',
@@ -22,8 +27,15 @@ export function Avatar({ name = '', avatarUrl, size = 'md', className }: AvatarP
 
   return (
     <div className={cn('pc-avatar', sizeClass, className)}>
-      {avatarUrl ? (
-        <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+      {avatarUrl && !imageFailed ? (
+        <img
+          src={avatarUrl}
+          alt={name}
+          className="w-full h-full object-cover"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setImageFailed(true)}
+        />
       ) : (
         <span>{initials}</span>
       )}

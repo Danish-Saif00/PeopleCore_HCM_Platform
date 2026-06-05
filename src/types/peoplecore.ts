@@ -69,6 +69,8 @@ export interface AuthSession {
   employeeId: string;
   email: string;
   role: Role;
+  fullName?: string;
+  avatarUrl?: string;
   expiresAt: string;
   lastActivity: string;
 }

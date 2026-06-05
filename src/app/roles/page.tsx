@@ -74,7 +74,7 @@ export default function RolesPage() {
       header: 'Employee',
       render: (row: any) => (
         <div className="flex items-center gap-3">
-          <Avatar name={row.fullName} size="sm" />
+          <Avatar name={row.fullName} avatarUrl={row.avatarUrl} size="sm" />
           <span className="font-medium text-[color:var(--foreground)]">{row.fullName}</span>
         </div>
       ),
@@ -92,7 +92,7 @@ export default function RolesPage() {
             <span
               className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full"
               style={{
-                animation: 'spin 0.6s linear infinite',
+                animation: 'spin var(--motion-loading-spin) linear infinite',
                 color: 'var(--primary)',
               }}
             />
@@ -122,7 +122,7 @@ export default function RolesPage() {
           <div
             className="w-8 h-8 rounded-full border-t-transparent"
             style={{
-              animation: 'spin 0.6s linear infinite',
+              animation: 'spin var(--motion-loading-spin) linear infinite',
               borderWidth: 3,
               borderStyle: 'solid',
               borderColor: 'var(--primary)',

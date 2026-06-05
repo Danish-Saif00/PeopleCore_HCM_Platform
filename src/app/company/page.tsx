@@ -4,10 +4,14 @@ import { AppShell } from '@/components/layout/AppShell';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import {
+  DepartmentDistributionChart,
+  type DepartmentDistribution,
+} from '@/components/charts/DepartmentDistributionChart';
 import { useAuth } from '@/lib/auth-context';
 import { formatDate } from '@/lib/formatters';
-import { Building2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import type { Employee } from '@/types/peoplecore';
 
 export default function CompanyPage() {
   const { session, loading } = useAuth();
@@ -16,7 +20,7 @@ export default function CompanyPage() {
   const [subdomain, setSubdomain] = useState('');
   const [country, setCountry] = useState('');
   const [createdAt, setCreatedAt] = useState('');
-  const [departments, setDepartments] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<DepartmentDistribution[]>([]);
   const [employeeCount, setEmployeeCount] = useState(0);
   const [dataLoading, setDataLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -52,12 +56,14 @@ export default function CompanyPage() {
           setEmployeeCount(empJson.data.length);
           // Extract unique departments and count employees in each
           const deptsMap: Record<string, number> = {};
-          empJson.data.forEach((e: any) => {
+          (empJson.data as Employee[]).forEach((e) => {
             if (e.department) {
               deptsMap[e.department] = (deptsMap[e.department] || 0) + 1;
             }
           });
-          setDepartments(Object.entries(deptsMap).map(([deptName, count]) => ({ name: deptName, count })));
+          setDepartments(
+            Object.entries(deptsMap).map(([deptName, value]) => ({ name: deptName, value }))
+          );
         }
       } catch (err) {
         console.error('Failed to load company settings:', err);
@@ -96,7 +102,7 @@ export default function CompanyPage() {
           <div
             className="w-8 h-8 rounded-full border-t-transparent"
             style={{
-              animation: 'spin 0.6s linear infinite',
+              animation: 'spin var(--motion-loading-spin) linear infinite',
               borderWidth: 3,
               borderStyle: 'solid',
               borderColor: 'var(--primary)',
@@ -134,37 +140,39 @@ export default function CompanyPage() {
             <p className="text-xs uppercase tracking-wider text-[color:var(--muted-foreground)] font-semibold">
               Founded / Seeded
             </p>
-            <p className="text-2xl font-bold mt-1">{createdAt ? formatDate(createdAt) : '—'}</p>
+            <p className="text-2xl font-bold mt-1">{createdAt ? formatDate(createdAt) : '--'}</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="pc-card p-6 space-y-4">
           {/* Edit Form */}
-          <div className="lg:col-span-2 pc-card p-6 space-y-4">
+          <div>
             <h3 className="text-base font-semibold border-b border-[color:var(--border)] pb-3">Company Details</h3>
-            <form onSubmit={handleUpdate} className="space-y-4">
-              <Input
-                label="Company Name"
-                placeholder="e.g. PeopleCore Demo Inc."
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-              <Input
-                label="Subdomain"
-                placeholder="e.g. demo"
-                value={subdomain}
-                onChange={(e) => setSubdomain(e.target.value)}
-                required
-                rightIcon={<span className="text-xs text-[color:var(--muted-foreground)]">.peoplecore.com</span>}
-              />
-              <Input
-                label="Country / HQ Location"
-                placeholder="e.g. United States"
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                required
-              />
+            <form onSubmit={handleUpdate} className="mt-4 space-y-4">
+              <div className="grid gap-4 lg:grid-cols-3">
+                <Input
+                  label="Company Name"
+                  placeholder="e.g. PeopleCore Demo Inc."
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+                <Input
+                  label="Subdomain"
+                  placeholder="e.g. demo"
+                  value={subdomain}
+                  onChange={(e) => setSubdomain(e.target.value)}
+                  required
+                  rightIcon={<span className="text-xs text-[color:var(--muted-foreground)]">.peoplecore.com</span>}
+                />
+                <Input
+                  label="Country / HQ Location"
+                  placeholder="e.g. United States"
+                  value={country}
+                  onChange={(e) => setCountry(e.target.value)}
+                  required
+                />
+              </div>
               {successMsg && (
                 <p className="text-xs text-[color:var(--success)] font-medium bg-[color:var(--success-soft)] p-3 rounded-xl">
                   {successMsg}
@@ -175,7 +183,9 @@ export default function CompanyPage() {
               </Button>
             </form>
           </div>
+        </div>
 
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Departments list */}
           <div className="pc-card p-6">
             <h3 className="text-base font-semibold border-b border-[color:var(--border)] pb-3">Departments</h3>
@@ -183,9 +193,18 @@ export default function CompanyPage() {
               {departments.map((dept) => (
                 <div key={dept.name} className="py-3 flex justify-between text-sm">
                   <span className="font-semibold text-[color:var(--foreground)]">{dept.name}</span>
-                  <span className="text-[color:var(--muted-foreground)]">{dept.count} people</span>
+                  <span className="text-[color:var(--muted-foreground)]">{dept.value} people</span>
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div className="pc-card p-6">
+            <h3 className="text-base font-semibold border-b border-[color:var(--border)] pb-3">
+              Employee Distribution
+            </h3>
+            <div className="mt-4">
+              <DepartmentDistributionChart data={departments} />
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db, generateId } from '@/data/mock-db';
 import { getSession } from '@/lib/auth';
 import type { Employee } from '@/types/peoplecore';
+import { getProfileImageUrl } from '@/lib/profile-image';
 
 export async function GET(req: NextRequest) {
   const session = await getSession();
@@ -39,8 +40,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
   }
   const body = await req.json();
+  const employeeId = generateId('emp');
   const emp: Employee = {
-    id: generateId('emp'),
+    id: employeeId,
     companyId: 'company_001',
     managerId: body.managerId ?? null,
     fullName: body.fullName,
@@ -52,7 +54,7 @@ export async function POST(req: NextRequest) {
     startDate: body.startDate,
     status: 'Active',
     employmentType: body.employmentType ?? 'Full-time',
-    avatarUrl: '',
+    avatarUrl: getProfileImageUrl(employeeId),
     baseSalary: Number(body.baseSalary) ?? 0,
     role: body.role ?? 'Employee',
   };

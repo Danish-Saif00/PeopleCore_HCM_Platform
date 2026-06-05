@@ -14,6 +14,7 @@ import { formatDate } from '@/lib/formatters';
 import { Star, Plus, Clipboard, CheckCircle, Eye } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { Review, ReviewCycle } from '@/types/peoplecore';
+import { Avatar } from '@/components/ui/Avatar';
 
 export default function ReviewsPage() {
   const { session, loading } = useAuth();
@@ -57,9 +58,9 @@ export default function ReviewsPage() {
         }
       }
 
-      // If HR, also fetch reviews for direct view if needed or allow them to see cycles
+      // Admin review tables are company-wide rather than limited to the signed-in reviewer.
       if (isHR) {
-        const revRes = await fetch('/api/reviews?view=reviewer');
+        const revRes = await fetch('/api/reviews?view=all');
         const revJson = await revRes.json();
         if (revJson.success) {
           setReviews(revJson.data);
@@ -128,7 +129,7 @@ export default function ReviewsPage() {
           <div
             className="w-8 h-8 rounded-full border-t-transparent"
             style={{
-              animation: 'spin 0.6s linear infinite',
+              animation: 'spin var(--motion-loading-spin) linear infinite',
               borderWidth: 3,
               borderStyle: 'solid',
               borderColor: 'var(--primary)',
@@ -221,12 +222,30 @@ export default function ReviewsPage() {
               {
                 key: 'employee',
                 header: 'Employee',
-                render: (row: any) => row.employee?.fullName ?? 'Me',
+                render: (row: any) => (
+                  <div className="flex items-center gap-3">
+                    <Avatar
+                      name={row.employee?.fullName ?? session.fullName ?? 'Me'}
+                      avatarUrl={row.employee?.avatarUrl ?? session.avatarUrl}
+                      size="sm"
+                    />
+                    <span>{row.employee?.fullName ?? session.fullName ?? 'Me'}</span>
+                  </div>
+                ),
               },
               {
                 key: 'reviewer',
                 header: 'Reviewer',
-                render: (row: any) => row.reviewer?.fullName ?? 'Manager',
+                render: (row: any) => (
+                  <div className="flex items-center gap-3">
+                    <Avatar
+                      name={row.reviewer?.fullName ?? 'Manager'}
+                      avatarUrl={row.reviewer?.avatarUrl}
+                      size="sm"
+                    />
+                    <span>{row.reviewer?.fullName ?? 'Manager'}</span>
+                  </div>
+                ),
               },
               {
                 key: 'status',
@@ -282,16 +301,23 @@ export default function ReviewsPage() {
         >
           <div className="space-y-5">
             {/* Header info */}
-            <div className="p-4 rounded-xl" style={{ background: 'var(--muted)' }}>
-              <p className="text-xs text-[color:var(--muted-foreground)] uppercase tracking-wider font-semibold">
-                Subject
-              </p>
-              <p className="text-sm font-semibold mt-0.5">
-                {selectedReview.employee?.fullName ?? 'Self'}
-              </p>
-              <p className="text-xs text-[color:var(--muted-foreground)] mt-1">
-                Reviewed by: {selectedReview.reviewer?.fullName ?? 'Manager'}
-              </p>
+            <div className="p-4 rounded-xl flex items-center gap-3" style={{ background: 'var(--muted)' }}>
+              <Avatar
+                name={selectedReview.employee?.fullName ?? session.fullName ?? 'Self'}
+                avatarUrl={selectedReview.employee?.avatarUrl ?? session.avatarUrl}
+                size="md"
+              />
+              <div>
+                <p className="text-xs text-[color:var(--muted-foreground)] uppercase tracking-wider font-semibold">
+                  Subject
+                </p>
+                <p className="text-sm font-semibold mt-0.5">
+                  {selectedReview.employee?.fullName ?? session.fullName ?? 'Self'}
+                </p>
+                <p className="text-xs text-[color:var(--muted-foreground)] mt-1">
+                  Reviewed by: {selectedReview.reviewer?.fullName ?? 'Manager'}
+                </p>
+              </div>
             </div>
 
             {isEditing ? (

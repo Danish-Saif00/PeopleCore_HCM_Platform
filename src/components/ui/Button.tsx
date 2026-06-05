@@ -37,7 +37,7 @@ export function Button({
       {...props}
     >
       {loading ? (
-        <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full" style={{ animation: 'spin 0.6s linear infinite' }} />
+        <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full" style={{ animation: 'spin var(--motion-loading-spin) linear infinite' }} />
       ) : icon}
       {children}
       {!loading && iconRight}

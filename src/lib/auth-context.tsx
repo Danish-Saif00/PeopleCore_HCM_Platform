@@ -59,7 +59,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshSession = useCallback(async () => {
-    await fetch('/api/auth/session', { method: 'PUT' });
+    const res = await fetch('/api/auth/session', { method: 'PUT' });
+    const data = await res.json();
+    if (data.success && data.session) {
+      setSession(data.session);
+    }
   }, []);
 
   // Refresh activity on user interaction

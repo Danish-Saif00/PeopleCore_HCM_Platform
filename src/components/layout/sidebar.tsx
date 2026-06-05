@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Users, DollarSign, FileText, Calendar, UserCheck,
   GitBranch, Clipboard, Star, Building2, CreditCard, Shield, LogOut,
-  PanelLeftClose, PanelLeftOpen, X,
+  PanelLeftClose, PanelLeftOpen, X, Contact,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
@@ -17,7 +17,7 @@ import { Logo } from '@/components/ui/Logo';
 
 const ICON_MAP: Record<string, React.ElementType> = {
   LayoutDashboard, Users, DollarSign, FileText, Calendar, UserCheck,
-  GitBranch, Clipboard, Star, Building2, CreditCard, Shield,
+  GitBranch, Clipboard, Star, Building2, CreditCard, Shield, Contact,
 };
 
 interface SidebarProps {
@@ -131,9 +131,13 @@ export function Sidebar({
         <footer className="sidebar-footer">
           {session && (
             <div className="sidebar-account">
-              <Avatar name={session.email} size="sm" />
+              <Avatar
+                name={session.fullName ?? session.email}
+                avatarUrl={session.avatarUrl}
+                size="sm"
+              />
               <div className="sidebar-account-copy">
-                <p>{session.email}</p>
+                <p>{session.fullName ?? session.email}</p>
                 <span>{session.role}</span>
               </div>
             </div>

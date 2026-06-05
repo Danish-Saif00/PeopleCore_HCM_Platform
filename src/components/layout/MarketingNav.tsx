@@ -26,7 +26,7 @@ export function MarketingNav() {
   return (
     <nav
       className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-all duration-200',
+        'fixed top-0 left-0 right-0 z-50 transition-all',
         scrolled ? 'bg-[color:var(--card)]/95 backdrop-blur-sm shadow-sm border-b border-[color:var(--border)]' : 'bg-transparent'
       )}
       style={{ height: 64 }}
@@ -71,7 +71,7 @@ export function MarketingNav() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden absolute top-16 left-0 right-0 bg-[color:var(--card)] border-b border-[color:var(--border)] shadow-lg p-4 flex flex-col gap-3" style={{ animation: 'slideDown 0.15s ease' }}>
+        <div className="motion-dropdown md:hidden absolute top-16 left-0 right-0 bg-[color:var(--card)] border-b border-[color:var(--border)] shadow-lg p-4 flex flex-col gap-3">
           {links.map((link) => (
             <Link key={link.href} href={link.href} className="text-sm py-2 text-[color:var(--foreground)]" onClick={() => setMobileOpen(false)}>{link.label}</Link>
           ))}

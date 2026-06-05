@@ -10,6 +10,9 @@ export async function GET() {
 }
 
 export async function PUT() {
-  await refreshSession();
-  return NextResponse.json({ success: true });
+  const session = await refreshSession();
+  if (!session) {
+    return NextResponse.json({ success: false, session: null }, { status: 401 });
+  }
+  return NextResponse.json({ success: true, session });
 }

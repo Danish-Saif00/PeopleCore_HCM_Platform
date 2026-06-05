@@ -1,7 +1,9 @@
 import type { Role } from '@/types/peoplecore';
 
 export type Permission =
+  | 'view:profile'
   | 'view:dashboard'
+  | 'view:directory'
   | 'view:employees'
   | 'manage:employees'
   | 'view:payroll'
@@ -27,7 +29,9 @@ export type Permission =
 const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   Guest: [],
   Employee: [
+    'view:profile',
     'view:dashboard',
+    'view:directory',
     'view:payslips',
     'view:time-off',
     'view:org-chart',
@@ -35,7 +39,9 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'view:reviews',
   ],
   Manager: [
+    'view:profile',
     'view:dashboard',
+    'view:directory',
     'view:payslips',
     'view:time-off',
     'manage:time-off',
@@ -47,7 +53,9 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'submit:reviews',
   ],
   'HR Admin': [
+    'view:profile',
     'view:dashboard',
+    'view:directory',
     'view:employees',
     'manage:employees',
     'view:payroll',
@@ -65,7 +73,9 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'submit:reviews',
   ],
   'Super Admin': [
+    'view:profile',
     'view:dashboard',
+    'view:directory',
     'view:employees',
     'manage:employees',
     'view:payroll',
@@ -91,7 +101,9 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
 };
 
 export const ROUTE_PERMISSIONS: Record<string, Permission> = {
+  '/profile': 'view:profile',
   '/dashboard': 'view:dashboard',
+  '/company-directory': 'view:directory',
   '/employees': 'view:employees',
   '/payroll': 'view:payroll',
   '/payslips': 'view:payslips',
@@ -144,6 +156,12 @@ export function getNavItems(role: Role) {
       roles: ['HR Admin', 'Super Admin'],
     },
     {
+      href: '/company-directory',
+      label: 'Directory',
+      icon: 'Contact',
+      roles: ['Employee', 'Manager', 'HR Admin', 'Super Admin'],
+    },
+    {
       href: '/payroll',
       label: 'Payroll',
       icon: 'DollarSign',
@@ -153,7 +171,7 @@ export function getNavItems(role: Role) {
       href: '/payslips',
       label: 'My Payslips',
       icon: 'FileText',
-      roles: ['Employee', 'Manager'],
+      roles: ['Employee', 'Manager', 'HR Admin', 'Super Admin'],
     },
     {
       href: '/time-off',

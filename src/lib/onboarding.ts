@@ -11,7 +11,12 @@ export function getTemplateById(id: string): OnboardingTemplate | undefined {
 }
 
 export function getTasksForTemplate(templateId: string): OnboardingTask[] {
-  return db.getOnboardingTasksByTemplate(templateId);
+  const template = db.getOnboardingTemplateById(templateId);
+  if (!template) return [];
+
+  return template.taskIds
+    .map((taskId) => db.getOnboardingTaskById(taskId))
+    .filter((task): task is OnboardingTask => Boolean(task));
 }
 
 export function getAllOnboardings(): EmployeeOnboarding[] {

@@ -12,6 +12,7 @@ import { formatDate } from '@/lib/formatters';
 import { Clipboard, Plus, CheckCircle, Clock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { SkeletonCard, SkeletonCardGrid } from '@/components/ui/skeleton';
+import { Avatar } from '@/components/ui/Avatar';
 
 export default function OnboardingPage() {
   const { session, loading } = useAuth();
@@ -99,7 +100,7 @@ export default function OnboardingPage() {
           <div
             className="w-8 h-8 rounded-full border-t-transparent"
             style={{
-              animation: 'spin 0.6s linear infinite',
+              animation: 'spin var(--motion-loading-spin) linear infinite',
               borderWidth: 3,
               borderStyle: 'solid',
               borderColor: 'var(--primary)',
@@ -168,7 +169,7 @@ export default function OnboardingPage() {
                 </div>
                 <div className="w-full bg-[color:var(--border)] h-2.5 rounded-full overflow-hidden">
                   <div
-                    className="h-full rounded-full transition-all duration-300"
+                    className="h-full rounded-full transition-all"
                     style={{
                       width: `${(myOnboarding.completedTasks.length / myOnboarding.tasks.length) * 100}%`,
                       backgroundColor: 'var(--primary)',
@@ -233,9 +234,16 @@ export default function OnboardingPage() {
                 key: 'employee',
                 header: 'New Hire',
                 render: (row: any) => (
-                  <span className="font-semibold text-[color:var(--foreground)]">
-                    {row.employee?.fullName ?? 'Employee'}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <Avatar
+                      name={row.employee?.fullName ?? 'Employee'}
+                      avatarUrl={row.employee?.avatarUrl}
+                      size="sm"
+                    />
+                    <span className="font-semibold text-[color:var(--foreground)]">
+                      {row.employee?.fullName ?? 'Employee'}
+                    </span>
+                  </div>
                 ),
               },
               {

@@ -18,7 +18,7 @@ export function LoadingSpinner({ size = 'md', className }: LoadingSpinnerProps) 
         borderWidth: border,
         borderStyle: 'solid',
         borderTopColor: 'transparent',
-        animation: 'spin 0.6s linear infinite',
+        animation: 'spin var(--motion-loading-spin) linear infinite',
       }}
       role="status"
       aria-label="Loading"

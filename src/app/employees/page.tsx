@@ -92,7 +92,7 @@ export default function EmployeesPage() {
       sortable: true,
       render: (row: Employee) => (
         <div className="flex items-center gap-3">
-          <Avatar name={row.fullName} size="sm" />
+          <Avatar name={row.fullName} avatarUrl={row.avatarUrl} size="sm" />
           <div>
             <p className="font-medium text-[color:var(--foreground)]">{row.fullName}</p>
             <p className="text-xs text-[color:var(--muted-foreground)]">{row.email}</p>
@@ -152,7 +152,7 @@ export default function EmployeesPage() {
           <div
             className="w-8 h-8 rounded-full border-t-transparent"
             style={{
-              animation: 'spin 0.6s linear infinite',
+              animation: 'spin var(--motion-loading-spin) linear infinite',
               borderWidth: 3,
               borderStyle: 'solid',
               borderColor: 'var(--primary)',
@@ -263,7 +263,11 @@ export default function EmployeesPage() {
         >
           <div className="space-y-5">
             <div className="flex items-center gap-4">
-              <Avatar name={selectedEmployee.fullName} size="xl" />
+              <Avatar
+                name={selectedEmployee.fullName}
+                avatarUrl={selectedEmployee.avatarUrl}
+                size="xl"
+              />
               <div>
                 <p className="font-semibold text-lg">{selectedEmployee.fullName}</p>
                 <p className="text-sm text-[color:var(--muted-foreground)]">{selectedEmployee.jobTitle}</p>

@@ -1,9 +1,10 @@
 'use client';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import type { Employee } from '@/types/peoplecore';
 import { getInitials } from '@/lib/formatters';
-import { Search, Download, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { Search, Download, ZoomIn, ZoomOut, RotateCcw, Minus, Plus } from 'lucide-react';
+import { Avatar } from '@/components/ui/Avatar';
 
 interface OrgNode {
   id: string;
@@ -11,8 +12,9 @@ interface OrgNode {
   title: string;
   department: string;
   managerId: string | null;
+  avatarUrl: string;
   children?: OrgNode[];
-  _children?: OrgNode[];
+  childCount: number;
 }
 
 interface OrgChartD3Props {
@@ -51,6 +53,8 @@ function buildTree(employees: Employee[]): OrgNode | null {
       title: e.jobTitle,
       department: e.department,
       managerId: e.managerId,
+      avatarUrl: e.avatarUrl,
+      childCount: 0,
     };
   });
   let root: OrgNode | null = null;
@@ -62,19 +66,45 @@ function buildTree(employees: Employee[]): OrgNode | null {
       const parent = map[e.managerId];
       parent.children = parent.children ?? [];
       parent.children.push(node);
+      parent.childCount += 1;
     }
   });
   return root;
+}
+
+function filterCollapsedTree(node: OrgNode, collapsed: Set<string>, revealAll: boolean): OrgNode {
+  return {
+    ...node,
+    children:
+      collapsed.has(node.id) && !revealAll
+        ? undefined
+        : node.children?.map((child) => filterCollapsedTree(child, collapsed, revealAll)),
+  };
 }
 
 export function OrgChartD3({ employees }: OrgChartD3Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [search, setSearch] = useState('');
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [isMobile, setIsMobile] = useState(false);
   const gRef = useRef<d3.Selection<SVGGElement, unknown, null, undefined> | null>(null);
   const rootRef = useRef<d3.HierarchyPointNode<OrgNode> | null>(null);
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
+  const treeData = useMemo(() => buildTree(employees), [employees]);
+  const managerIds = useMemo(
+    () => new Set(employees.filter((employee) => employee.managerId).map((employee) => employee.managerId as string)),
+    [employees]
+  );
 
+  const toggleNode = (id: string) => {
+    setCollapsed((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   function renderChart(
     g: d3.Selection<SVGGElement, unknown, null, undefined>,
@@ -111,7 +141,10 @@ export function OrgChartD3({ employees }: OrgChartD3Props) {
       .append('g')
       .attr('class', 'org-chart-node')
       .attr('transform', (d) => `translate(${d.x - NODE_WIDTH / 2}, ${d.y - NODE_HEIGHT / 2})`)
-      .style('cursor', 'pointer');
+      .style('cursor', (d) => (d.data.childCount > 0 ? 'pointer' : 'default'))
+      .on('click', (_event, d) => {
+        if (d.data.childCount > 0) toggleNode(d.data.id);
+      });
 
     // Node card background
     nodeG.append('rect')
@@ -119,11 +152,11 @@ export function OrgChartD3({ employees }: OrgChartD3Props) {
       .attr('height', NODE_HEIGHT)
       .attr('rx', 12)
       .attr('ry', 12)
-      .style('fill', '#ffffff')
+      .style('fill', 'var(--card)')
       .style('stroke', (d) => {
-        if (!q) return '#dce8e2';
+        if (!q) return 'var(--border)';
         const match = d.data.name.toLowerCase().includes(q.toLowerCase());
-        return match ? '#138a5b' : '#dce8e2';
+        return match ? 'var(--primary)' : 'var(--border)';
       })
       .style('stroke-width', (d) => {
         if (!q) return 1.5;
@@ -164,6 +197,24 @@ export function OrgChartD3({ employees }: OrgChartD3Props) {
       })
       .text((d) => getInitials(d.data.name));
 
+    nodeG.filter((d) => Boolean(d.data.avatarUrl))
+      .append('image')
+      .attr('href', (d) => d.data.avatarUrl)
+      .attr('x', avatarX)
+      .attr('y', avatarY)
+      .attr('width', avatarSize)
+      .attr('height', avatarSize)
+      .attr('preserveAspectRatio', 'xMidYMid slice')
+      .attr('crossorigin', 'anonymous')
+      .style('clip-path', 'circle(50%)')
+      .style('opacity', (d) => {
+        if (!q) return 1;
+        return d.data.name.toLowerCase().includes(q.toLowerCase()) ? 1 : 0.3;
+      })
+      .on('error', function () {
+        d3.select(this).remove();
+      });
+
     const textX = avatarX + avatarSize + 8;
 
     // Name
@@ -173,7 +224,7 @@ export function OrgChartD3({ employees }: OrgChartD3Props) {
       .style('font-size', '12px')
       .style('font-weight', '600')
       .style('font-family', 'Inter, sans-serif')
-      .style('fill', '#10201a')
+      .style('fill', 'var(--foreground)')
       .style('opacity', (d) => {
         if (!q) return 1;
         return d.data.name.toLowerCase().includes(q.toLowerCase()) ? 1 : 0.3;
@@ -195,7 +246,7 @@ export function OrgChartD3({ employees }: OrgChartD3Props) {
       .attr('y', NODE_HEIGHT / 2 + 14)
       .style('font-size', '10px')
       .style('font-family', 'Inter, sans-serif')
-      .style('fill', '#66756f')
+      .style('fill', 'var(--muted-foreground)')
       .style('opacity', (d) => {
         if (!q) return 1;
         return d.data.name.toLowerCase().includes(q.toLowerCase()) ? 1 : 0.3;
@@ -206,28 +257,28 @@ export function OrgChartD3({ employees }: OrgChartD3Props) {
       });
 
     // Expand/collapse indicator (bottom circle) for nodes with children
-    nodeG.filter((d) => !!(d.data.children && d.data.children.length > 0))
+    nodeG.filter((d) => d.data.childCount > 0)
       .append('circle')
       .attr('cx', NODE_WIDTH / 2)
       .attr('cy', NODE_HEIGHT)
       .attr('r', 8)
-      .style('fill', '#138a5b')
-      .style('cursor', 'pointer');
+      .style('fill', 'var(--primary)')
+      .style('cursor', 'pointer')
+      .style('filter', 'drop-shadow(0 1px 2px rgba(16,32,26,0.18))');
 
-    nodeG.filter((d) => !!(d.data.children && d.data.children.length > 0))
+    nodeG.filter((d) => d.data.childCount > 0)
       .append('text')
       .attr('x', NODE_WIDTH / 2)
       .attr('y', NODE_HEIGHT + 5)
       .attr('text-anchor', 'middle')
-      .style('fill', 'white')
+      .style('fill', 'var(--primary-foreground)')
       .style('font-size', '12px')
       .style('font-weight', 'bold')
       .style('pointer-events', 'none')
-      .text('-');
+      .text((d) => (collapsed.has(d.data.id) && !q ? '+' : '-'));
   }
 
   useEffect(() => {
-    const treeData = buildTree(employees);
     if (!treeData || !svgRef.current || !containerRef.current) return;
 
     const container = containerRef.current;
@@ -251,7 +302,8 @@ export function OrgChartD3({ employees }: OrgChartD3Props) {
     zoomRef.current = zoom;
     svg.call(zoom);
 
-    const hierarchyRoot = d3.hierarchy<OrgNode>(treeData);
+    const visibleTree = filterCollapsedTree(treeData, collapsed, Boolean(search.trim()));
+    const hierarchyRoot = d3.hierarchy<OrgNode>(visibleTree);
     const tree = d3.tree<OrgNode>().nodeSize([NODE_WIDTH + H_GAP, NODE_HEIGHT + V_GAP]);
     const layout = tree(hierarchyRoot);
     rootRef.current = layout;
@@ -266,13 +318,10 @@ export function OrgChartD3({ employees }: OrgChartD3Props) {
 
     renderChart(g, layout, search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [employees]);
+  }, [treeData, collapsed, search]);
 
   const handleSearch = (q: string) => {
     setSearch(q);
-    if (gRef.current && rootRef.current) {
-      renderChart(gRef.current, rootRef.current, q);
-    }
   };
 
   const zoomIn = () => {
@@ -312,8 +361,10 @@ export function OrgChartD3({ employees }: OrgChartD3Props) {
   const exportPng = () => {
     if (!svgRef.current) return;
     const svgEl = svgRef.current;
+    const exportSvg = svgEl.cloneNode(true) as SVGSVGElement;
+    exportSvg.querySelectorAll('image').forEach((image) => image.remove());
     const serializer = new XMLSerializer();
-    let svgStr = serializer.serializeToString(svgEl);
+    let svgStr = serializer.serializeToString(exportSvg);
     svgStr = '<?xml version="1.0" encoding="UTF-8"?>' + svgStr;
     const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -336,8 +387,6 @@ export function OrgChartD3({ employees }: OrgChartD3Props) {
     img.src = url;
   };
 
-  // Mobile list view
-  const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
@@ -345,11 +394,8 @@ export function OrgChartD3({ employees }: OrgChartD3Props) {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  const filtered = search
-    ? employees.filter((e) =>
-        e.fullName.toLowerCase().includes(search.toLowerCase())
-      )
-    : employees;
+  const collapseAll = () => setCollapsed(new Set(managerIds));
+  const expandAll = () => setCollapsed(new Set());
 
   return (
     <div className="flex flex-col h-full" style={{ minHeight: '500px' }}>
@@ -371,6 +417,22 @@ export function OrgChartD3({ employees }: OrgChartD3Props) {
         </div>
         {!isMobile && (
           <div className="flex items-center gap-2">
+            <button
+              onClick={expandAll}
+              className="pc-btn pc-btn-ghost pc-btn-sm flex items-center gap-1.5"
+              aria-label="Expand all organization branches"
+              title="Expand all organization branches"
+            >
+              <Plus size={14} /> Expand all
+            </button>
+            <button
+              onClick={collapseAll}
+              className="pc-btn pc-btn-ghost pc-btn-sm flex items-center gap-1.5"
+              aria-label="Collapse all organization branches"
+              title="Collapse all organization branches"
+            >
+              <Minus size={14} /> Collapse all
+            </button>
             <button
               onClick={zoomIn}
               className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[color:var(--muted)] text-[color:var(--muted-foreground)]"
@@ -405,32 +467,14 @@ export function OrgChartD3({ employees }: OrgChartD3Props) {
 
       {/* Chart or mobile list */}
       {isMobile ? (
-        <div className="overflow-y-auto p-4 space-y-2">
-          {filtered.map((emp) => (
-            <div key={emp.id} className="pc-card p-4 flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                style={{
-                  background: getAvatarColor(emp.fullName).bg,
-                  color: getAvatarColor(emp.fullName).color,
-                }}
-              >
-                {getInitials(emp.fullName)}
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-[color:var(--foreground)] truncate">
-                  {emp.fullName}
-                </p>
-                <p className="text-xs text-[color:var(--muted-foreground)] truncate">
-                  {emp.jobTitle}
-                </p>
-                <p className="text-xs text-[color:var(--muted-foreground)]">
-                  {emp.department}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
+        <MobileOrgTree
+          employees={employees}
+          search={search}
+          collapsed={collapsed}
+          onToggle={toggleNode}
+          onExpandAll={expandAll}
+          onCollapseAll={collapseAll}
+        />
       ) : (
         <div className="flex-1 overflow-hidden" ref={containerRef}>
           <svg
@@ -444,6 +488,98 @@ export function OrgChartD3({ employees }: OrgChartD3Props) {
           />
         </div>
       )}
+    </div>
+  );
+}
+
+interface MobileOrgTreeProps {
+  employees: Employee[];
+  search: string;
+  collapsed: Set<string>;
+  onToggle: (id: string) => void;
+  onExpandAll: () => void;
+  onCollapseAll: () => void;
+}
+
+function MobileOrgTree({
+  employees,
+  search,
+  collapsed,
+  onToggle,
+  onExpandAll,
+  onCollapseAll,
+}: MobileOrgTreeProps) {
+  const query = search.trim().toLowerCase();
+  const byManager = useMemo(() => {
+    const groups = new Map<string | null, Employee[]>();
+    employees.forEach((employee) => {
+      const group = groups.get(employee.managerId) ?? [];
+      group.push(employee);
+      groups.set(employee.managerId, group);
+    });
+    return groups;
+  }, [employees]);
+
+  const renderLevel = (managerId: string | null, depth: number): React.ReactNode =>
+    (byManager.get(managerId) ?? []).map((employee) => {
+      const children = byManager.get(employee.id) ?? [];
+      const isCollapsed = collapsed.has(employee.id) && !query;
+      const matches = !query || employee.fullName.toLowerCase().includes(query);
+
+      return (
+        <div key={employee.id}>
+          <div
+            className="flex items-center gap-3 border-b border-[color:var(--border)] px-4 py-3"
+            style={{ paddingLeft: 16 + depth * 18, opacity: matches ? 1 : 0.3 }}
+          >
+            <Avatar name={employee.fullName} avatarUrl={employee.avatarUrl} size="md" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-[color:var(--foreground)]">
+                {employee.fullName}
+              </p>
+              <p className="truncate text-xs text-[color:var(--muted-foreground)]">
+                {employee.jobTitle}
+              </p>
+              <p className="truncate text-xs text-[color:var(--muted-foreground)]">
+                {employee.department}
+              </p>
+            </div>
+            {children.length > 0 && (
+              <button
+                type="button"
+                onClick={() => onToggle(employee.id)}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[color:var(--primary-soft)] text-[color:var(--primary)]"
+                aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} ${employee.fullName}'s reports`}
+                title={`${isCollapsed ? 'Expand' : 'Collapse'} ${employee.fullName}'s reports`}
+              >
+                {isCollapsed ? <Plus size={16} /> : <Minus size={16} />}
+              </button>
+            )}
+          </div>
+          {!isCollapsed && renderLevel(employee.id, depth + 1)}
+        </div>
+      );
+    });
+
+  return (
+    <div className="overflow-y-auto">
+      <div className="flex gap-2 border-b border-[color:var(--border)] p-3">
+        <button
+          type="button"
+          onClick={onExpandAll}
+          className="pc-btn pc-btn-ghost pc-btn-sm flex flex-1 items-center justify-center gap-1.5"
+        >
+          <Plus size={14} /> Expand all
+        </button>
+        <button
+          type="button"
+          onClick={onCollapseAll}
+          className="pc-btn pc-btn-ghost pc-btn-sm flex flex-1 items-center justify-center gap-1.5"
+        >
+          <Minus size={14} /> Collapse all
+        </button>
+      </div>
+      {renderLevel(null, 0)}
     </div>
   );
 }

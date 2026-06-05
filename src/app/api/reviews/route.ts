@@ -15,15 +15,28 @@ export async function GET(req: NextRequest) {
     }));
     return NextResponse.json({ success: true, data: cycles });
   }
+  if (view === 'all') {
+    if (!['HR Admin', 'Super Admin'].includes(session.role)) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
+    const reviews = db.getReviews().map((r) => ({
+      ...r,
+      employee: db.getEmployeeById(r.employeeId),
+      reviewer: db.getEmployeeById(r.reviewerId),
+    }));
+    return NextResponse.json({ success: true, data: reviews });
+  }
   if (view === 'reviewer') {
     const reviews = getReviewsForReviewer(session.employeeId).map((r) => ({
       ...r,
       employee: db.getEmployeeById(r.employeeId),
+      reviewer: db.getEmployeeById(r.reviewerId),
     }));
     return NextResponse.json({ success: true, data: reviews });
   }
   const reviews = getReviewsForEmployee(session.employeeId).map((r) => ({
     ...r,
+    employee: db.getEmployeeById(r.employeeId),
     reviewer: db.getEmployeeById(r.reviewerId),
   }));
   return NextResponse.json({ success: true, data: reviews });

@@ -18,6 +18,7 @@ export async function GET() {
       employeeId: e.id,
       fullName: e.fullName,
       email: e.email,
+      avatarUrl: e.avatarUrl,
       role: auth?.role ?? e.role,
     };
   });

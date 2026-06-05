@@ -35,7 +35,7 @@ export function SidePanel({
     }
 
     setVisible(false);
-    const timeout = window.setTimeout(() => setMounted(false), 420);
+    const timeout = window.setTimeout(() => setMounted(false), 260);
     return () => window.clearTimeout(timeout);
   }, [open]);
 
