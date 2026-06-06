@@ -116,7 +116,18 @@ export default function LoginPage() {
           {/* Mobile logo */}
           <div className="mb-8 flex items-center lg:hidden">
             <Link href="/" aria-label="PeopleCore home">
-              <Logo variant="light-horizontal-short" size="sm" />
+              <Logo
+                variant="light-horizontal-short"
+                size="sm"
+                priority
+                className="theme-logo-light"
+              />
+              <Logo
+                variant="dark-horizontal-short"
+                size="sm"
+                priority
+                className="theme-logo-dark"
+              />
             </Link>
           </div>
 

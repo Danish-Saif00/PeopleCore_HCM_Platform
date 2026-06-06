@@ -300,15 +300,12 @@ body {
   display: none;
 }
 
-.sidebar-nav::-webkit-scrollbar {
-  display: none;
-}
-.sidebar-scroll-area {
+.sidebar-nav-list {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
-.sidebar-scroll-area::-webkit-scrollbar {
+.sidebar-nav-list::-webkit-scrollbar {
   display: none;
 }
 .sidebar-control-button,
