@@ -1,7 +1,7 @@
 // ============================================================
 // PeopleCore HCM — Seed Data
 // ============================================================
-// All mock data lives here. Do NOT scatter records in components.
+// All mock data lives here.
 // ============================================================
 
 import type {

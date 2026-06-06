@@ -16,17 +16,17 @@ The app uses a mocked backend/data layer. There is no real payment processing, o
 
 ## Tech Stack
 
-| Area | Implementation |
-| --- | --- |
-| Framework | Next.js 16 App Router |
-| Language | TypeScript |
-| UI | React 19 |
-| Styling | Tailwind CSS 4 plus global CSS variables in `src/app/globals.css` |
-| Charts | D3.js for the org chart |
-| Icons | `lucide-react` |
-| Data | Seeded local mock data in `src/data/seed.ts` |
+| Area         | Implementation                                                       |
+| ------------ | -------------------------------------------------------------------- |
+| Framework    | Next.js 16 App Router                                                |
+| Language     | TypeScript                                                           |
+| UI           | React 19                                                             |
+| Styling      | Tailwind CSS 4 plus global CSS variables in `src/app/globals.css`    |
+| Charts       | D3.js for the org chart                                              |
+| Icons        | `lucide-react`                                                       |
+| Data         | Seeded local mock data in `src/data/seed.ts`                         |
 | Mock backend | Next route handlers under `src/app/api/*` plus `src/data/mock-db.ts` |
-| Auth | Mock session cookie and client auth context |
+| Auth         | Mock session cookie and client auth context                          |
 
 ## Project Structure
 
@@ -264,12 +264,12 @@ import { Logo } from '@/components/ui/Logo';
 
 All demo accounts use the password `Demo@12345`.
 
-| Role | Email | Typical Access |
-| --- | --- | --- |
-| Super Admin | `aaron.loeb@peoplecore-demo.com` | Dashboard, employees, payroll, payslips, time off, team, org chart, onboarding, reviews, company, billing, roles |
-| HR Admin | `halima.fayed@peoplecore-demo.com` | Dashboard, employees, payroll, payslips, time off, team, org chart, onboarding, reviews |
-| Manager | `jane.cooper@peoplecore-demo.com` | Dashboard, payslips, time off approvals, team, org chart, onboarding, reviews |
-| Employee | `john.doe@peoplecore-demo.com` | Dashboard, payslips, time off, org chart, onboarding, reviews |
+| Role        | Email                              | Typical Access                                                                                                   |
+| ----------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Super Admin | `aaron.loeb@peoplecore-demo.com`   | Dashboard, employees, payroll, payslips, time off, team, org chart, onboarding, reviews, company, billing, roles |
+| HR Admin    | `halima.fayed@peoplecore-demo.com` | Dashboard, employees, payroll, payslips, time off, team, org chart, onboarding, reviews                          |
+| Manager     | `jane.cooper@peoplecore-demo.com`  | Dashboard, payslips, time off approvals, team, org chart, onboarding, reviews                                    |
+| Employee    | `john.doe@peoplecore-demo.com`     | Dashboard, payslips, time off, org chart, onboarding, reviews                                                    |
 
 ## Seed Data
 
@@ -299,6 +299,12 @@ Seed data includes:
 - marketing page content
 
 The mock database is initialized from seed data and resets when the server process restarts.
+
+## Environment Variables
+
+No environment variables are required to run this demo locally.
+
+The application uses mocked route handlers, local seed data, and an in-memory mock database. There is no real database, payment provider, email provider, or third-party identity provider required for local setup.
 
 ## Prerequisites
 
@@ -406,23 +412,23 @@ Validate the production bundle:
 
 ```bash
 npm run build
-npm run start -- -p 3001
+npm run start
 ```
 
 Then open:
 
 ```txt
-http://localhost:3001
+http://localhost:3000
 ```
 
 If production responds but development hangs, the issue is likely a stuck dev server or dev cache state rather than a production build failure.
 
 ## Documentation
 
-Additional project documentation:
+Setup, build, run, validation, demo credentials, seed data, and module details are documented in this README.
 
-- `docs/BUILD_AND_RUN.md`
-- `docs/ACCEPTANCE_CHECKLIST.md`
+Additional asset documentation:
+
 - `src/assets/peoplecore_logo_kit/README.md`
 
 ## Current Limitations
