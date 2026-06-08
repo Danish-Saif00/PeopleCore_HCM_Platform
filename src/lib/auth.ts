@@ -1,10 +1,9 @@
 import { db, generateId } from '@/data/mock-db';
 import type { AuthSession, Role } from '@/types/peoplecore';
 import { cookies } from 'next/headers';
-import { getProfileImageUrl } from '@/lib/profile-image';
+import { SESSION_COOKIE, SESSION_DURATION_SECONDS, sessionCookieOptions, signSession, verifySession } from '@/lib/session';
 
-const SESSION_COOKIE = 'pc_session';
-const SESSION_DURATION_MS = 8 * 60 * 60 * 1000; // 8 hours
+const SESSION_DURATION_MS = SESSION_DURATION_SECONDS * 1000;
 const MAX_FAILED_ATTEMPTS = 5;
 
 function enrichSession(session: AuthSession): AuthSession {
@@ -31,6 +30,11 @@ export interface SignupResult {
   error?: string;
 }
 
+async function writeSession(session: AuthSession): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.set(SESSION_COOKIE, await signSession(session), sessionCookieOptions);
+}
+
 export async function login(email: string, password: string): Promise<LoginResult> {
   const authUser = db.getAuthUserByEmail(email);
   if (!authUser) {
@@ -55,6 +59,9 @@ export async function login(email: string, password: string): Promise<LoginResul
       remainingAttempts: MAX_FAILED_ATTEMPTS - newAttempts,
     };
   }
+  if (!authUser.verified) {
+    return { success: false, error: 'Verify your work email before signing in.' };
+  }
   // Reset failed attempts on success
   db.updateAuthUser(authUser.id, { failedLoginAttempts: 0 });
   const now = new Date();
@@ -66,13 +73,7 @@ export async function login(email: string, password: string): Promise<LoginResul
     expiresAt: new Date(now.getTime() + SESSION_DURATION_MS).toISOString(),
     lastActivity: now.toISOString(),
   });
-  const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE, JSON.stringify(session), {
-    httpOnly: true,
-    sameSite: 'lax',
-    maxAge: SESSION_DURATION_MS / 1000,
-    path: '/',
-  });
+  await writeSession(session);
   return { success: true, session };
 }
 
@@ -86,11 +87,8 @@ export async function getSession(): Promise<AuthSession | null> {
     const cookieStore = await cookies();
     const cookie = cookieStore.get(SESSION_COOKIE);
     if (!cookie) return null;
-    const session: AuthSession = JSON.parse(cookie.value);
-    if (new Date(session.expiresAt) < new Date()) {
-      cookieStore.delete(SESSION_COOKIE);
-      return null;
-    }
+    const session = await verifySession(cookie.value);
+    if (!session) return null;
     return enrichSession(session);
   } catch {
     return null;
@@ -107,13 +105,7 @@ export async function refreshSession(): Promise<AuthSession | null> {
       lastActivity: now.toISOString(),
       expiresAt: new Date(now.getTime() + SESSION_DURATION_MS).toISOString(),
     });
-    const cookieStore = await cookies();
-    cookieStore.set(SESSION_COOKIE, JSON.stringify(updated), {
-      httpOnly: true,
-      sameSite: 'lax',
-      maxAge: SESSION_DURATION_MS / 1000,
-      path: '/',
-    });
+    await writeSession(updated);
     return updated;
   } catch {
     return null;
@@ -122,6 +114,7 @@ export async function refreshSession(): Promise<AuthSession | null> {
 
 export async function signup(
   companyName: string,
+  adminFullName: string,
   email: string,
   password: string
 ): Promise<SignupResult> {
@@ -129,51 +122,38 @@ export async function signup(
   if (existing) {
     return { success: false, error: 'An account with this email already exists.' };
   }
-  const employeeId = generateId('emp');
-  const userId = generateId('auth');
   const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-  const fullName = email
-    .split('@')[0]
-    .replace(/[._-]/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-
-  db.addEmployee({
-    id: employeeId,
-    companyId: 'company_001',
-    managerId: null,
-    fullName,
-    email,
-    phone: '',
-    department: 'General',
-    departmentId: '',
-    jobTitle: 'Team Member',
-    startDate: new Date().toISOString().split('T')[0],
-    status: 'Active',
-    employmentType: 'Full-time',
-    avatarUrl: getProfileImageUrl(employeeId),
-    baseSalary: 0,
-    role: 'Employee',
-  });
-  db.addAuthUser({
-    id: userId,
-    employeeId,
-    email,
+  db.addPendingSignup({
+    id: generateId('signup'),
+    companyName,
+    adminFullName,
+    email: email.toLowerCase(),
     password,
-    role: 'Employee',
-    failedLoginAttempts: 0,
-    locked: false,
-    verified: false,
+    verificationCode,
+    expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
   });
+  const { logMockEmail } = await import('@/lib/email-events');
+  logMockEmail(
+    email,
+    'verification',
+    'Verify your PeopleCore work email',
+    `Your verification code is ${verificationCode}. It expires in 15 minutes.`
+  );
   return { success: true, verificationCode };
 }
 
-export async function setSessionFromClient(sessionStr: string): Promise<void> {
-  const cookieStore = await cookies();
-  const session: AuthSession = JSON.parse(sessionStr);
-  cookieStore.set(SESSION_COOKIE, JSON.stringify(session), {
-    httpOnly: true,
-    sameSite: 'lax',
-    maxAge: SESSION_DURATION_MS / 1000,
-    path: '/',
+export async function createSessionForUser(userId: string): Promise<AuthSession | null> {
+  const authUser = db.getAuthUserById(userId);
+  if (!authUser) return null;
+  const now = new Date();
+  const session = enrichSession({
+    userId: authUser.id,
+    employeeId: authUser.employeeId,
+    email: authUser.email,
+    role: authUser.role,
+    expiresAt: new Date(now.getTime() + SESSION_DURATION_MS).toISOString(),
+    lastActivity: now.toISOString(),
   });
+  await writeSession(session);
+  return session;
 }

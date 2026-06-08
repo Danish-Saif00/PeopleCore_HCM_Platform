@@ -26,7 +26,7 @@ The app uses a mocked backend/data layer. There is no real payment processing, o
 | Icons        | `lucide-react`                                                       |
 | Data         | Seeded local mock data in `src/data/seed.ts`                         |
 | Mock backend | Next route handlers under `src/app/api/*` plus `src/data/mock-db.ts` |
-| Auth         | Mock session cookie and client auth context                          |
+| Auth         | Signed demo JWT in an httpOnly cookie plus client auth context       |
 
 ## Project Structure
 
@@ -74,7 +74,7 @@ Core files:
 - `src/lib/auth-context.tsx`
 - `src/proxy.ts`
 
-The app implements mocked login, signup, verification, invite acceptance, failed login tracking, lockout after 5 failed attempts, and an 8-hour session concept. Sessions are stored in the `pc_session` cookie for the demo.
+The app implements mocked login, server-owned signup verification, invite acceptance, failed login tracking, lockout after 5 failed attempts, and an 8-hour session. Signed JWT sessions are stored in the httpOnly `pc_session` cookie.
 
 ### Role Gating and Navigation
 
@@ -302,9 +302,33 @@ The mock database is initialized from seed data and resets when the server proce
 
 ## Environment Variables
 
-No environment variables are required to run this demo locally.
+Local development does not require any environment variables to run the demo.
 
-The application uses mocked route handlers, local seed data, and an in-memory mock database. There is no real database, payment provider, email provider, or third-party identity provider required for local setup.
+The app uses a signed demo JWT session stored in an httpOnly cookie. For local development, the app may use a demo-only fallback secret when `AUTH_SECRET` is omitted.
+
+For production or production-like testing, create a `.env.local` file and add a long random secret:
+
+```env
+AUTH_SECRET=replace-with-a-long-random-secret
+```
+
+A template is included in:
+
+```txt
+.env.example
+```
+
+To generate a strong random secret, run:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+```
+
+Then paste the generated value into `.env.local`.
+
+Do not commit real secrets to the repository.
+
+The application uses mocked route handlers, local seed data, and an in-memory mock database. There is no real database, payment provider, email provider, or third-party identity provider required for local demo setup.
 
 ## Prerequisites
 

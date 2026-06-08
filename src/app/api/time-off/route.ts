@@ -13,6 +13,9 @@ export async function GET(req: NextRequest) {
   } else if (view === 'manager') {
     requests = getRequestsForManager(session.employeeId);
   } else {
+    if (!['HR Admin', 'Super Admin'].includes(session.role)) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
     requests = getAllRequests();
   }
   const type = searchParams.get('type');

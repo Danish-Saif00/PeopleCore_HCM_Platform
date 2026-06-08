@@ -1,6 +1,7 @@
 import { db, generateId } from '@/data/mock-db';
 import type { TimeOffRequest, TimeOffStatus, TimeOffType } from '@/types/peoplecore';
 import { createNotification } from './notifications';
+import { logMockEmail } from './email-events';
 
 export function getRequestsForEmployee(employeeId: string): TimeOffRequest[] {
   return db.getTimeOffRequestsByEmployee(employeeId).sort(
@@ -48,6 +49,8 @@ export function createRequest(input: CreateTimeOffInput): TimeOffRequest {
       message: `${employee.fullName} requested ${input.type} from ${input.startDate} to ${input.endDate}.`,
       type: 'Time Off',
     });
+    const manager = db.getEmployeeById(input.managerId);
+    if (manager) logMockEmail(manager.email, 'time_off_submitted', `New time-off request from ${employee.fullName}`, `${employee.fullName} requested ${input.type}.`);
   }
   return req;
 }
@@ -66,6 +69,8 @@ export function approveRequest(id: string, managerNote = ''): TimeOffRequest | n
         message: `Your ${req.type} request (${req.startDate} - ${req.endDate}) has been approved.`,
         type: 'Time Off',
       });
+      const employee = db.getEmployeeById(req.employeeId);
+      if (employee) logMockEmail(employee.email, 'time_off_approved', 'Time-off request approved', `Your ${req.type} request was approved.`);
     }
   }
   return updated;
@@ -85,6 +90,8 @@ export function rejectRequest(id: string, managerNote = ''): TimeOffRequest | nu
         message: `Your ${req.type} request (${req.startDate} - ${req.endDate}) has been rejected.`,
         type: 'Time Off',
       });
+      const employee = db.getEmployeeById(req.employeeId);
+      if (employee) logMockEmail(employee.email, 'time_off_rejected', 'Time-off request rejected', `Your ${req.type} request was rejected.`);
     }
   }
   return updated;

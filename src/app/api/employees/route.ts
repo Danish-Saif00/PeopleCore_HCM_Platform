@@ -3,6 +3,8 @@ import { db, generateId } from '@/data/mock-db';
 import { getSession } from '@/lib/auth';
 import type { Employee } from '@/types/peoplecore';
 import { getProfileImageUrl } from '@/lib/profile-image';
+import { assignTemplate } from '@/lib/onboarding';
+import { logMockEmail } from '@/lib/email-events';
 
 export async function GET(req: NextRequest) {
   const session = await getSession();
@@ -31,7 +33,10 @@ export async function GET(req: NextRequest) {
     const bVal = String(b[sortBy as keyof Employee] ?? '');
     return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
   });
-  return NextResponse.json({ success: true, data: employees });
+  const data = ['HR Admin', 'Super Admin'].includes(session.role)
+    ? employees
+    : employees.map(({ baseSalary: _baseSalary, ...employee }) => employee);
+  return NextResponse.json({ success: true, data });
 }
 
 export async function POST(req: NextRequest) {
@@ -59,5 +64,15 @@ export async function POST(req: NextRequest) {
     role: body.role ?? 'Employee',
   };
   db.addEmployee(emp);
-  return NextResponse.json({ success: true, data: emp });
+  db.addAuthUser({
+    id: generateId('auth'), employeeId, email: emp.email, password: '', role: emp.role,
+    failedLoginAttempts: 0, locked: false, verified: false,
+  });
+  const invite = db.addInvite({
+    id: generateId('invite'), employeeId, email: emp.email, token: generateId('token'),
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), acceptedAt: null,
+  });
+  if (body.onboardingTemplateId) assignTemplate(employeeId, body.onboardingTemplateId);
+  logMockEmail(emp.email, 'invite', 'You are invited to PeopleCore', `/invite?token=${invite.token}`);
+  return NextResponse.json({ success: true, data: emp, inviteUrl: `/invite?token=${invite.token}` });
 }

@@ -9,6 +9,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const view = searchParams.get('view') ?? 'mine';
   if (view === 'cycles') {
+    if (!['HR Admin', 'Super Admin'].includes(session.role)) return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
     const cycles = getReviewCycles().map((c) => ({
       ...c,
       reviews: getReviewsByCycle(c.id),
@@ -59,6 +60,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: cycle });
   }
   if (body.action === 'submit-review') {
+    const review = db.getReviewById(body.reviewId);
+    if (!review || review.reviewerId !== session.employeeId || review.status === 'Completed') {
+      return NextResponse.json({ success: false, error: 'You cannot submit this review.' }, { status: 403 });
+    }
+    if (!Number.isInteger(body.ratings?.overall) || body.ratings.overall < 1 || body.ratings.overall > 5
+      || !body.strengths?.trim() || !body.areasOfImprovement?.trim() || !body.goals?.trim()) {
+      return NextResponse.json({ success: false, error: 'Rating, strengths, improvement areas, and goals are required.' }, { status: 400 });
+    }
     const result = submitReview(body.reviewId, {
       ratings: body.ratings,
       strengths: body.strengths,

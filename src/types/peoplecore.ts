@@ -81,6 +81,25 @@ export interface DemoCredential {
   password: string;
 }
 
+export interface PendingSignup {
+  id: string;
+  companyName: string;
+  adminFullName: string;
+  email: string;
+  password: string;
+  verificationCode: string;
+  expiresAt: string;
+}
+
+export interface MockInvite {
+  id: string;
+  employeeId: string;
+  email: string;
+  token: string;
+  expiresAt: string;
+  acceptedAt: string | null;
+}
+
 // ============================================================
 // Payroll
 // ============================================================

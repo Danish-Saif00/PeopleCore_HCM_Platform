@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { canAccessRoute } from './lib/permissions';
+import { SESSION_COOKIE, verifySession } from './lib/session';
 
-const SESSION_COOKIE = 'pc_session';
-
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Let API requests, static files, and public routes bypass middleware
@@ -16,7 +15,9 @@ export function proxy(request: NextRequest) {
     pathname === '/login' ||
     pathname === '/signup' ||
     pathname === '/verify-email' ||
-    pathname === '/invite'
+    pathname === '/invite' ||
+    pathname === '/blog' ||
+    pathname.startsWith('/blog/')
   ) {
     return NextResponse.next();
   }
@@ -29,10 +30,8 @@ export function proxy(request: NextRequest) {
   }
 
   try {
-    const session = JSON.parse(sessionCookie.value);
-    
-    // Check if session has expired
-    if (new Date(session.expiresAt) < new Date()) {
+    const session = await verifySession(sessionCookie.value);
+    if (!session) {
       const response = NextResponse.redirect(new URL('/login', request.url));
       response.cookies.delete(SESSION_COOKIE);
       return response;
@@ -44,7 +43,6 @@ export function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL('/restricted', request.url));
     }
   } catch {
-    // If JSON parsing fails, delete cookie and redirect to login
     const response = NextResponse.redirect(new URL('/login', request.url));
     response.cookies.delete(SESSION_COOKIE);
     return response;

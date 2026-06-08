@@ -24,3 +24,14 @@ export function getServerConfig() {
     //   stripeSecretKey: process.env.STRIPE_SECRET_KEY,
   };
 }
+
+const LOCAL_DEMO_AUTH_SECRET = "peoplecore-local-demo-auth-secret-do-not-use-in-production";
+
+export function getAuthSecret(): string {
+  const secret = process.env.AUTH_SECRET;
+  if (secret) return secret;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("AUTH_SECRET is required in production.");
+  }
+  return LOCAL_DEMO_AUTH_SECRET;
+}

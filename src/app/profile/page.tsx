@@ -13,7 +13,7 @@ import { useAuth } from '@/lib/auth-context';
 import { formatDate } from '@/lib/formatters';
 import { getRoleColor } from '@/lib/permissions';
 import { validatePasswordStrength } from '@/lib/password';
-import type { Employee } from '@/types/peoplecore';
+import type { Employee, Review } from '@/types/peoplecore';
 
 interface ProfileManager {
   id: string;
@@ -24,6 +24,7 @@ interface ProfileManager {
 interface ProfileData {
   employee: Employee;
   manager: ProfileManager | null;
+  completedReviews: Array<Review & { reviewer?: Employee }>;
 }
 
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
@@ -429,6 +430,32 @@ export default function ProfilePage() {
                 </Button>
               </div>
             </form>
+          </section>
+
+          <section className="pc-card p-6">
+            <h2 className="card-title border-b border-[color:var(--border)] pb-4">Completed Performance Reviews</h2>
+            {profile.completedReviews.length === 0 ? (
+              <p className="mt-4 text-sm text-[color:var(--muted-foreground)]">No completed reviews yet.</p>
+            ) : (
+              <div className="mt-4 space-y-4">
+                {profile.completedReviews.map((review) => (
+                  <article key={review.id} className="rounded-xl border border-[color:var(--border)] p-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <h3 className="font-semibold">{review.period}</h3>
+                        <p className="text-xs text-[color:var(--muted-foreground)]">Reviewed by {review.reviewer?.fullName ?? 'Manager'}</p>
+                      </div>
+                      <Badge variant="success">{review.ratings.overall} / 5</Badge>
+                    </div>
+                    <dl className="mt-4 grid gap-3 text-sm">
+                      <div><dt className="font-semibold">Strengths</dt><dd className="text-[color:var(--muted-foreground)]">{review.strengths}</dd></div>
+                      <div><dt className="font-semibold">Areas of Improvement</dt><dd className="text-[color:var(--muted-foreground)]">{review.areasOfImprovement}</dd></div>
+                      <div><dt className="font-semibold">Goals</dt><dd className="text-[color:var(--muted-foreground)]">{review.goals}</dd></div>
+                    </dl>
+                  </article>
+                ))}
+              </div>
+            )}
           </section>
         </div>
       </div>

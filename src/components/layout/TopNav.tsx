@@ -2,11 +2,12 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, Menu } from "lucide-react";
+import { ChevronDown, Menu, Search } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { Avatar } from "@/components/ui/Avatar";
 import { NotificationDropdown } from "@/components/ui/NotificationDropdown";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { useDebounce } from "@/lib/debounce";
 
 interface TopNavProps {
   onMenuClick?: () => void;
@@ -16,6 +17,9 @@ export function TopNav({ onMenuClick }: TopNavProps) {
   const { session } = useAuth();
   const [avatarOpen, setAvatarOpen] = useState(false);
   const avatarRef = useRef<HTMLDivElement>(null);
+  const [search, setSearch] = useState("");
+  const [results, setResults] = useState<Array<{ id: string; fullName: string; jobTitle: string; department: string }>>([]);
+  const debouncedSearch = useDebounce(search, 200);
 
   useEffect(() => {
     const handler = (event: MouseEvent) => {
@@ -30,6 +34,17 @@ export function TopNav({ onMenuClick }: TopNavProps) {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  useEffect(() => {
+    if (debouncedSearch.trim().length < 2) {
+      setResults([]);
+      return;
+    }
+    fetch(`/api/employees/search?q=${encodeURIComponent(debouncedSearch)}`)
+      .then((response) => response.json())
+      .then((result) => setResults(result.success ? result.data : []))
+      .catch(() => setResults([]));
+  }, [debouncedSearch]);
 
   const handleLogout = async () => {
     try {
@@ -53,6 +68,21 @@ export function TopNav({ onMenuClick }: TopNavProps) {
       >
         <Menu size={20} />
       </button>
+
+      <div className="top-nav-search pc-search-field hidden md:block">
+        <Search size={16} className="pc-search-icon" />
+        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search employees by name" aria-label="Search employees by name" className="pc-input pc-search-input" />
+        {results.length > 0 && (
+          <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-[color:var(--border)] bg-[color:var(--card)] shadow-lg">
+            {results.map((employee) => (
+              <Link key={employee.id} href="/company-directory" onClick={() => { setSearch(""); setResults([]); }} className="block px-4 py-3 hover:bg-[color:var(--muted)]">
+                <p className="text-sm font-medium">{employee.fullName}</p>
+                <p className="text-xs text-[color:var(--muted-foreground)]">{employee.jobTitle} · {employee.department}</p>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className="top-nav-actions">
         <ThemeToggle />

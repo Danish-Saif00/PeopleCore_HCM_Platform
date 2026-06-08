@@ -1,6 +1,7 @@
 import { db, generateId } from '@/data/mock-db';
 import type { OnboardingTemplate, OnboardingTask, EmployeeOnboarding } from '@/types/peoplecore';
 import { createNotification } from './notifications';
+import { logMockEmail } from './email-events';
 
 export function getTemplates(): OnboardingTemplate[] {
   return db.getOnboardingTemplates();
@@ -87,6 +88,7 @@ export function assignTemplate(
       message: 'Your onboarding checklist is ready. Complete your tasks to get started.',
       type: 'Onboarding',
     });
+    logMockEmail(emp.email, 'onboarding_assigned', 'Onboarding checklist assigned', 'Your onboarding checklist is ready.');
   }
   return onboarding;
 }

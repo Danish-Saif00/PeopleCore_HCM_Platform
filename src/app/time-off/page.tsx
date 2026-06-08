@@ -32,7 +32,7 @@ const STATUS_FILTER_OPTIONS = [
 export default function TimeOffPage() {
   const { session, loading } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'mine' | 'team'>('mine');
+  const [activeTab, setActiveTab] = useState<'mine' | 'team' | 'calendar'>('mine');
   const [requests, setRequests] = useState<TimeOffRequest[]>([]);
   const [calendarRequests, setCalendarRequests] = useState<TimeOffRequest[]>([]);
   const [calendarEmployees, setCalendarEmployees] = useState<Employee[]>([]);
@@ -49,6 +49,7 @@ export default function TimeOffPage() {
 
   const fetchRequests = useCallback(async () => {
     setDataLoading(true);
+    if (activeTab === 'calendar') return;
     const view = activeTab === 'mine' ? 'mine' : 'manager';
     const params = new URLSearchParams({ view });
     if (typeFilter !== 'all') params.set('type', typeFilter);
@@ -76,7 +77,7 @@ export default function TimeOffPage() {
     setCalendarLoading(true);
     try {
       const [requestsResponse, employeesResponse] = await Promise.all([
-        fetch('/api/time-off?view=all&status=Approved'),
+        fetch(`/api/time-off?view=${session?.role === 'Manager' ? 'manager' : ['HR Admin', 'Super Admin'].includes(session?.role ?? '') ? 'all' : 'mine'}&status=Approved`),
         fetch('/api/employees'),
       ]);
       const [requestsJson, employeesJson] = await Promise.all([
@@ -90,7 +91,7 @@ export default function TimeOffPage() {
     } finally {
       setCalendarLoading(false);
     }
-  }, []);
+  }, [session]);
 
   useEffect(() => {
     if (session) fetchCalendarData();
@@ -178,24 +179,23 @@ export default function TimeOffPage() {
         }
       />
 
-      {isManagerOrAdmin && (
-        <div className="mb-4">
+      <div className="mb-4">
           <Tabs
             tabs={[
               { id: 'mine', label: 'My Requests' },
-              { id: 'team', label: 'Team Approvals' },
+              ...(isManagerOrAdmin ? [{ id: 'team', label: 'Team Approvals' }] : []),
+              { id: 'calendar', label: 'Calendar' },
             ]}
             activeTab={activeTab}
             onChange={(tabId) => {
-              setActiveTab(tabId as 'mine' | 'team');
+              setActiveTab(tabId as 'mine' | 'team' | 'calendar');
               setRequests([]);
             }}
           />
         </div>
-      )}
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-5">
+      {activeTab !== 'calendar' && <div className="flex flex-wrap gap-3 mb-5">
         <select
           className="pc-select h-9 text-sm w-auto min-w-[140px]"
           value={typeFilter}
@@ -221,9 +221,9 @@ export default function TimeOffPage() {
             </option>
           ))}
         </select>
-      </div>
+      </div>}
 
-      <div className="pc-card overflow-hidden">
+      {activeTab !== 'calendar' && <div className="pc-card overflow-hidden">
         <DataTable
           columns={columns as any}
           data={requests as any}
@@ -233,15 +233,15 @@ export default function TimeOffPage() {
           emptyDescription="You will see leave requests listed here."
           emptyIcon={<Clock size={32} />}
         />
-      </div>
+      </div>}
 
-      <div className="mt-6">
+      {activeTab === 'calendar' && <div className="mt-6">
         <TimeOffCalendar
           requests={calendarRequests}
           employees={calendarEmployees}
           loading={calendarLoading}
         />
-      </div>
+      </div>}
 
       {/* Request leave modal */}
       <RequestTimeOffModal

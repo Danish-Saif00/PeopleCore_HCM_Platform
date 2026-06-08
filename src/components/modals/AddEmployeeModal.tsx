@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -42,9 +42,19 @@ export function AddEmployeeModal({
     baseSalary: '',
     employmentType: 'Full-time',
     role: 'Employee',
+    onboardingTemplateId: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [templates, setTemplates] = useState<Array<{ id: string; name: string }>>([]);
+
+  useEffect(() => {
+    if (!open) return;
+    fetch('/api/onboarding?view=templates')
+      .then((response) => response.json())
+      .then((result) => setTemplates(result.success ? result.data : []))
+      .catch(() => setTemplates([]));
+  }, [open]);
 
   const set = (key: string, val: string) =>
     setForm((f) => ({ ...f, [key]: val }));
@@ -85,13 +95,16 @@ export function AddEmployeeModal({
           baseSalary: '',
           employmentType: 'Full-time',
           role: 'Employee',
+          onboardingTemplateId: '',
         });
         setErrors({});
         onSuccess();
         onClose();
+      } else {
+        setErrors({ email: data.error ?? 'Unable to add employee.' });
       }
     } catch {
-      // ignore
+      setErrors({ email: 'Network error. Please try again.' });
     } finally {
       setLoading(false);
     }
@@ -187,6 +200,14 @@ export function AddEmployeeModal({
           options={ROLE_OPTIONS}
           value={form.role}
           onChange={(e) => set('role', e.target.value)}
+        />
+        <Select
+          id="emp-onboarding-template"
+          label="Onboarding Template"
+          options={[{ value: '', label: 'No template' }, ...templates.map((template) => ({ value: template.id, label: template.name }))]}
+          value={form.onboardingTemplateId}
+          onChange={(e) => set('onboardingTemplateId', e.target.value)}
+          className="col-span-2"
         />
       </div>
     </Modal>

@@ -1,6 +1,7 @@
 import { db, generateId } from '@/data/mock-db';
 import type { PayrollRun, Payslip } from '@/types/peoplecore';
 import { createNotification } from './notifications';
+import { logMockEmail } from './email-events';
 
 export function getPayrollRuns(): PayrollRun[] {
   return db.getPayrollRuns().sort(
@@ -69,6 +70,7 @@ export function runPayroll(input: RunPayrollInput): RunPayrollResult {
         message: `Your ${input.period} payslip is ready to view.`,
         type: 'Payroll',
       });
+      logMockEmail(emp.email, 'payslip_ready', `${input.period} payslip ready`, `Your ${input.period} payslip is ready to view.`);
     }
     return slip;
   });

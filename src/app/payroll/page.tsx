@@ -22,6 +22,8 @@ export default function PayrollPage() {
   const [runs, setRuns] = useState<PayrollRun[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('All');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [showRunModal, setShowRunModal] = useState(false);
   const [meta, setMeta] = useState({ estimatedGross: 0, employeeCount: 0 });
   const [selectedRun, setSelectedRun] = useState<PayrollRun | null>(null);
@@ -74,14 +76,16 @@ export default function PayrollPage() {
     }
   };
 
-  const filteredRuns = runs.filter(
-    (r) => statusFilter === 'All' || r.status.toLowerCase() === statusFilter.toLowerCase()
+  const filteredRuns = runs.filter((run) =>
+    (statusFilter === 'All' || run.status === statusFilter)
+    && (!dateFrom || (run.runAt ?? run.dateFrom ?? '') >= dateFrom)
+    && (!dateTo || (run.runAt ?? run.dateTo ?? '') <= `${dateTo}T23:59:59`)
   );
 
   const columns = [
     {
       key: 'period',
-      header: 'Pay Period',
+      header: 'Period',
       render: (row: PayrollRun) => (
         <div>
           <p className="font-semibold text-[color:var(--foreground)]">{row.period}</p>
@@ -99,13 +103,8 @@ export default function PayrollPage() {
       render: (row: PayrollRun) => <StatusBadge status={row.status} />,
     },
     {
-      key: 'employeeCount',
-      header: 'Employees',
-      render: (row: PayrollRun) => row.employeeCount ?? meta.employeeCount,
-    },
-    {
       key: 'totalAmount',
-      header: 'Total Run Cost',
+      header: 'Total Amount',
       render: (row: PayrollRun) => (
         <span className="font-mono font-medium">
           {row.totalAmount > 0 ? formatCurrency(row.totalAmount) : '—'}
@@ -114,8 +113,17 @@ export default function PayrollPage() {
     },
     {
       key: 'runAt',
-      header: 'Processed At',
+      header: 'Run Date',
       render: (row: PayrollRun) => (row.runAt ? formatDate(row.runAt) : '—'),
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      render: (row: PayrollRun) => (
+        <Button size="sm" variant="ghost" onClick={(event) => { event.stopPropagation(); handleFetchPayslips(row); }}>
+          View Details
+        </Button>
+      ),
     },
   ];
 
@@ -196,9 +204,11 @@ export default function PayrollPage() {
           id="filter-payroll-status"
         >
           {STATUSES.map((s) => (
-            <option key={s}>{s} Runs</option>
+            <option key={s} value={s}>{s === 'All' ? 'All Runs' : s}</option>
           ))}
         </select>
+        <input className="pc-input h-9 w-auto text-sm" type="date" aria-label="Payroll from date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} />
+        <input className="pc-input h-9 w-auto text-sm" type="date" aria-label="Payroll to date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} />
       </div>
 
       <div className="pc-card overflow-hidden">

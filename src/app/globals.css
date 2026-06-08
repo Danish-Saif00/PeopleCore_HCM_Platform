@@ -514,10 +514,17 @@ body {
   position: sticky;
   top: 0;
   z-index: 30;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(48px, 1fr) minmax(280px, 448px) minmax(48px, 1fr);
   align-items: center;
   padding: 0 24px;
   gap: 16px;
+}
+
+.top-nav-search {
+  grid-column: 2;
+  width: 100%;
+  justify-self: center;
 }
 
 .app-content {
@@ -529,14 +536,27 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-left: auto;
+  grid-column: 3;
+  justify-self: end;
   flex-shrink: 0;
 }
 
 .top-nav-icon-button {
+  grid-column: 1;
   width: 48px;
   height: 48px;
   flex-shrink: 0;
+}
+
+@media (max-width: 767px) {
+  .top-nav {
+    display: flex;
+    padding: 0 12px;
+  }
+
+  .top-nav-actions {
+    margin-left: auto;
+  }
 }
 
 .theme-toggle {

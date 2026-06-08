@@ -15,12 +15,13 @@ export default function VerifyEmailPage() {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const [email, setEmail] = useState('');
-  const [storedCode, setStoredCode] = useState('');
+  const [demoCode, setDemoCode] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setEmail(sessionStorage.getItem('signup_email') ?? '');
-      setStoredCode(sessionStorage.getItem('verification_code') ?? '123456');
+      setDemoCode(sessionStorage.getItem('verification_demo_code') ?? '');
     }
   }, []);
 
@@ -68,27 +69,39 @@ export default function VerifyEmailPage() {
     }
   };
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     const entered = code.join('');
-    if (entered === storedCode || entered === '123456') {
+    setLoading(true);
+    const response = await fetch('/api/auth/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code: entered }),
+    });
+    const result = await response.json();
+    setLoading(false);
+    if (result.success) {
       setVerified(true);
       setTimeout(() => router.push('/login'), 2000);
     } else {
-      setError('Invalid verification code. Please check your email.');
+      setError(result.error ?? 'Verification failed. Please try again.');
     }
   };
 
-  const handleResend = () => {
+  const handleResend = async () => {
+    const response = await fetch('/api/auth/resend-verification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const result = await response.json();
+    if (!result.success) {
+      setError(result.error ?? 'Unable to resend the code.');
+      return;
+    }
     setTimeLeft(15 * 60);
     setCode(['', '', '', '', '', '']);
     setError('');
-    // In a real app, trigger a new code to be sent
-    // For demo: reset to the stored code
-    const newCode = '123456';
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('verification_code', newCode);
-      setStoredCode(newCode);
-    }
+    setDemoCode(result.verificationCode ?? '');
     inputRefs.current[0]?.focus();
   };
 
@@ -196,7 +209,7 @@ export default function VerifyEmailPage() {
             className="font-mono font-bold px-1.5 py-0.5 rounded"
             style={{ background: 'var(--card)', color: 'var(--primary)' }}
           >
-            123456
+            {demoCode || 'check mock email log'}
           </code>
         </div>
 
@@ -205,6 +218,7 @@ export default function VerifyEmailPage() {
           className="w-full"
           size="lg"
           disabled={code.some((d) => !d) || timeLeft <= 0}
+          loading={loading}
           id="verify-code"
         >
           Verify Email

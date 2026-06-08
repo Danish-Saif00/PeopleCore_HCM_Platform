@@ -17,11 +17,10 @@ export function MarketingNav() {
   }, []);
 
   const links = [
-    { href: '#features', label: 'Features' },
-    { href: '#how-it-works', label: 'How It Works' },
-    { href: '#pricing', label: 'Pricing' },
-    { href: '#customers', label: 'Customers' },
-    { href: '#faq', label: 'FAQ' },
+    { href: '/#features', label: 'Features' },
+    { href: '/#pricing', label: 'Pricing' },
+    { href: '/#customers', label: 'Customers' },
+    { href: '/blog', label: 'Blog' },
   ];
 
   return (

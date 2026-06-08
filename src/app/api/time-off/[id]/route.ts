@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { approveRequest, rejectRequest } from '@/lib/time-off';
+import { db } from '@/data/mock-db';
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -8,6 +9,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
   }
   const { id } = await params;
+  const request = db.getTimeOffRequestById(id);
+  if (!request) return NextResponse.json({ success: false, error: 'Request not found' }, { status: 404 });
+  if (session.role === 'Manager' && request.managerId !== session.employeeId) {
+    return NextResponse.json({ success: false, error: 'You can only manage requests from your team.' }, { status: 403 });
+  }
   const { action, managerNote } = await req.json();
   let result;
   if (action === 'approve') {

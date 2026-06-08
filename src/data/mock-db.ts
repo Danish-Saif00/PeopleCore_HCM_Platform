@@ -22,6 +22,8 @@ import type {
   Review,
   Notification,
   EmailEvent,
+  PendingSignup,
+  MockInvite,
 } from "@/types/peoplecore";
 
 // Deep clone to avoid mutation of seed constants
@@ -33,7 +35,7 @@ function clone<T>(obj: T): T {
 // Mutable State
 // ============================================================
 
-let company: Company = clone(seed.company);
+const companies: Company[] = [clone(seed.company)];
 const departments: Department[] = clone(seed.departments);
 const employees: Employee[] = clone(seed.employees);
 const authUsers: AuthUser[] = clone(seed.authUsers);
@@ -48,6 +50,8 @@ const reviewCycles: ReviewCycle[] = clone(seed.reviewCycles);
 const reviews: Review[] = clone(seed.reviews);
 let notifications: Notification[] = clone(seed.notifications);
 const emailEvents: EmailEvent[] = clone(seed.emailEvents);
+const pendingSignups: PendingSignup[] = [];
+const invites: MockInvite[] = [];
 
 // ============================================================
 // ID Generator
@@ -63,10 +67,15 @@ export function generateId(prefix: string): string {
 
 export const db = {
   // --- Company ---
-  getCompany: () => company,
-  updateCompany: (updates: Partial<Company>) => {
-    company = { ...company, ...updates };
+  getCompany: () => companies[0],
+  getCompanies: () => companies,
+  addCompany: (company: Company) => {
+    companies.push(company);
     return company;
+  },
+  updateCompany: (updates: Partial<Company>) => {
+    companies[0] = { ...companies[0], ...updates };
+    return companies[0];
   },
 
   // --- Departments ---
@@ -97,6 +106,33 @@ export const db = {
   addAuthUser: (user: AuthUser) => {
     authUsers.push(user);
     return user;
+  },
+
+  // --- Pending signups and invites ---
+  getPendingSignupByEmail: (email: string) =>
+    pendingSignups.find((signup) => signup.email.toLowerCase() === email.toLowerCase()),
+  addPendingSignup: (signup: PendingSignup) => {
+    const existing = pendingSignups.findIndex((item) => item.email.toLowerCase() === signup.email.toLowerCase());
+    if (existing >= 0) pendingSignups.splice(existing, 1, signup);
+    else pendingSignups.push(signup);
+    return signup;
+  },
+  deletePendingSignup: (id: string) => {
+    const index = pendingSignups.findIndex((signup) => signup.id === id);
+    if (index >= 0) pendingSignups.splice(index, 1);
+  },
+  getInviteByToken: (token: string) => invites.find((invite) => invite.token === token),
+  getInviteByEmail: (email: string) =>
+    invites.find((invite) => invite.email.toLowerCase() === email.toLowerCase() && !invite.acceptedAt),
+  addInvite: (invite: MockInvite) => {
+    invites.push(invite);
+    return invite;
+  },
+  updateInvite: (id: string, updates: Partial<MockInvite>) => {
+    const index = invites.findIndex((invite) => invite.id === id);
+    if (index === -1) return null;
+    invites[index] = { ...invites[index], ...updates };
+    return invites[index];
   },
   updateAuthUser: (id: string, updates: Partial<AuthUser>) => {
     const idx = authUsers.findIndex((u) => u.id === id);

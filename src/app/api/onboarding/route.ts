@@ -9,6 +9,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const view = searchParams.get('view') ?? 'mine';
   if (view === 'templates') {
+    if (!['HR Admin', 'Super Admin'].includes(session.role)) return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
     const templates = getTemplates().map((t) => ({
       ...t,
       tasks: getTasksForTemplate(t.id),
@@ -16,6 +17,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, data: templates });
   }
   if (view === 'all') {
+    if (!['HR Admin', 'Super Admin'].includes(session.role)) return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
     const onboardings = getAllOnboardings().map((o) => ({
       ...o,
       employee: db.getEmployeeById(o.employeeId),
@@ -35,6 +37,7 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   const body = await req.json();
   if (body.action === 'create-template') {
+    if (!['HR Admin', 'Super Admin'].includes(session.role)) return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
     const template = createTemplate({ name: body.name, tasks: body.tasks });
     return NextResponse.json({ success: true, data: template });
   }

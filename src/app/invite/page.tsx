@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, UserPlus } from 'lucide-react';
@@ -9,12 +9,17 @@ import { Logo } from '@/components/ui/Logo';
 
 export default function InvitePage() {
   const router = useRouter();
+  const [token, setToken] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [showPwd, setShowPwd] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ password?: string; confirm?: string }>({});
+
+  useEffect(() => {
+    setToken(new URLSearchParams(window.location.search).get('token') ?? '');
+  }, []);
 
   const validate = () => {
     const errs: typeof errors = {};
@@ -29,10 +34,20 @@ export default function InvitePage() {
     e.preventDefault();
     if (!validate()) return;
     setLoading(true);
-    // Simulate API call
-    await new Promise((r) => setTimeout(r, 800));
-    setLoading(false);
-    router.push('/login');
+    try {
+      const response = await fetch('/api/auth/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, password }),
+      });
+      const result = await response.json();
+      setLoading(false);
+      if (result.success) router.push('/dashboard');
+      else setErrors({ password: result.error ?? 'Unable to accept invitation.' });
+    } catch {
+      setLoading(false);
+      setErrors({ password: 'Network error. Please try again.' });
+    }
   };
 
   return (

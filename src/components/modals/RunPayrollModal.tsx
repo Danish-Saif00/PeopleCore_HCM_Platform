@@ -148,25 +148,20 @@ export function RunPayrollModal({
           toError={errors.dateTo}
         />
 
-        {error && (
-          <div
-            className="flex items-start gap-2 p-3 rounded-xl"
-            style={{ background: 'var(--danger-soft)' }}
-          >
-            <AlertCircle
-              size={16}
-              style={{
-                color: 'var(--danger)',
-                flexShrink: 0,
-                marginTop: 1,
-              }}
-            />
-            <p className="text-sm" style={{ color: 'var(--danger)' }}>
-              {error}
-            </p>
-          </div>
-        )}
       </div>
+      {error && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4" role="alertdialog" aria-modal="true" aria-label="Payroll processing failed">
+          <div className="w-full max-w-md rounded-2xl bg-[color:var(--card)] p-6 text-center shadow-xl">
+            <AlertCircle size={36} className="mx-auto text-[color:var(--danger)]" />
+            <h3 className="mt-4 text-xl font-bold">Payroll processing failed</h3>
+            <p className="mt-2 text-sm text-[color:var(--muted-foreground)]">{error}</p>
+            <div className="mt-6 flex justify-center gap-3">
+              <Button variant="ghost" onClick={() => setError('')}>Review details</Button>
+              <Button onClick={handleSubmit} loading={loading}>Retry</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </Modal>
   );
 }

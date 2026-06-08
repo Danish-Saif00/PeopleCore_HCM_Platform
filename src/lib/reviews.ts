@@ -1,6 +1,7 @@
 import { db, generateId } from '@/data/mock-db';
 import type { ReviewCycle, Review, ReviewCycleStatus } from '@/types/peoplecore';
 import { createNotification } from './notifications';
+import { logMockEmail } from './email-events';
 
 export function getReviewCycles(): ReviewCycle[] {
   return db.getReviewCycles();
@@ -70,6 +71,8 @@ export function createCycle(input: CreateCycleInput): ReviewCycle {
         message: `Please complete the ${input.name} review for ${employee.fullName}.`,
         type: 'Reviews',
       });
+      const reviewer = db.getEmployeeById(reviewerId);
+      if (reviewer) logMockEmail(reviewer.email, 'review_assigned', 'Performance review assigned', `Complete the ${input.name} review for ${employee.fullName}.`);
     }
   });
   return cycle;
@@ -105,6 +108,8 @@ export function submitReview(
         message: `${reviewer.fullName} has completed your ${review.period} performance review.`,
         type: 'Reviews',
       });
+      const employee = db.getEmployeeById(review.employeeId);
+      if (employee) logMockEmail(employee.email, 'review_submitted', 'Performance review completed', `${reviewer.fullName} completed your ${review.period} review.`);
     }
   }
   return updated;

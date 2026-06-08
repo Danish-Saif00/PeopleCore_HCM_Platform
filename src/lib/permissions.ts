@@ -150,6 +150,12 @@ export function getNavItems(role: Role) {
       roles: ['Employee', 'Manager', 'HR Admin', 'Super Admin'],
     },
     {
+      href: '/profile',
+      label: 'My Profile',
+      icon: 'UserRound',
+      roles: ['Employee', 'Manager', 'HR Admin', 'Super Admin'],
+    },
+    {
       href: '/employees',
       label: 'Employees',
       icon: 'Users',

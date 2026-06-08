@@ -27,6 +27,9 @@ function getProfileData(employee: Employee) {
           jobTitle: manager.jobTitle,
         }
       : null,
+    completedReviews: db.getReviewsByEmployee(employee.id)
+      .filter((review) => review.status === 'Completed')
+      .map((review) => ({ ...review, reviewer: db.getEmployeeById(review.reviewerId) })),
   };
 }
 

@@ -11,6 +11,7 @@ export default function SignupPage() {
   const router = useRouter();
   const [form, setForm] = useState({
     companyName: '',
+    adminFullName: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -25,6 +26,7 @@ export default function SignupPage() {
   const validate = () => {
     const e: Record<string, string> = {};
     if (!form.companyName.trim()) e.companyName = 'Company name is required.';
+    if (!form.adminFullName.trim()) e.adminFullName = 'Admin full name is required.';
     if (!form.email.trim()) e.email = 'Work email is required.';
     else if (!/^[^@]+@[^@]+\.[^@]+$/.test(form.email)) e.email = 'Enter a valid email.';
     if (!form.password) e.password = 'Password is required.';
@@ -47,8 +49,8 @@ export default function SignupPage() {
       const data = await res.json();
       setLoading(false);
       if (data.success) {
-        sessionStorage.setItem('verification_code', data.verificationCode ?? '123456');
         sessionStorage.setItem('signup_email', form.email);
+        sessionStorage.setItem('verification_demo_code', data.verificationCode ?? '');
         router.push('/verify-email');
       } else {
         setErrors({ email: data.error ?? 'Signup failed.' });
@@ -79,6 +81,21 @@ export default function SignupPage() {
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          <Input
+            id="admin-full-name"
+            label="Admin Full Name"
+            value={form.adminFullName}
+            onChange={(e) => {
+              set('adminFullName', e.target.value);
+              setErrors((p) => ({ ...p, adminFullName: '' }));
+            }}
+            onBlur={() => {
+              if (!form.adminFullName.trim()) setErrors((p) => ({ ...p, adminFullName: 'Admin full name is required.' }));
+            }}
+            error={errors.adminFullName}
+            placeholder="Alex Morgan"
+            autoComplete="name"
+          />
           <Input
             id="company-name"
             label="Company Name"

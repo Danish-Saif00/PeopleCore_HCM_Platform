@@ -3,11 +3,11 @@ import { signup } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
   try {
-    const { companyName, email, password } = await req.json();
-    if (!companyName || !email || !password) {
+    const { companyName, adminFullName, email, password } = await req.json();
+    if (!companyName?.trim() || !adminFullName?.trim() || !email?.trim() || !password) {
       return NextResponse.json({ success: false, error: 'All fields are required.' }, { status: 400 });
     }
-    const result = await signup(companyName, email, password);
+    const result = await signup(companyName.trim(), adminFullName.trim(), email.trim(), password);
     return NextResponse.json(result);
   } catch {
     return NextResponse.json({ success: false, error: 'Internal server error.' }, { status: 500 });

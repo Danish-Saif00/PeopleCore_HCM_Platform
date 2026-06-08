@@ -173,6 +173,16 @@ export function OrgChartD3({ employees }: OrgChartD3Props) {
     const avatarX = 14;
     const avatarY = NODE_HEIGHT / 2 - avatarSize / 2;
 
+    const defs = g.append('defs');
+    nodes.forEach((node) => {
+      defs.append('clipPath')
+        .attr('id', `org-avatar-${node.data.id}`)
+        .append('circle')
+        .attr('cx', avatarX + avatarSize / 2)
+        .attr('cy', avatarY + avatarSize / 2)
+        .attr('r', avatarSize / 2);
+    });
+
     nodeG.append('circle')
       .attr('cx', avatarX + avatarSize / 2)
       .attr('cy', avatarY + avatarSize / 2)
@@ -205,8 +215,8 @@ export function OrgChartD3({ employees }: OrgChartD3Props) {
       .attr('width', avatarSize)
       .attr('height', avatarSize)
       .attr('preserveAspectRatio', 'xMidYMid slice')
-      .attr('crossorigin', 'anonymous')
-      .style('clip-path', 'circle(50%)')
+      .attr('referrerPolicy', 'no-referrer')
+      .attr('clip-path', (d) => `url(#org-avatar-${d.data.id})`)
       .style('opacity', (d) => {
         if (!q) return 1;
         return d.data.name.toLowerCase().includes(q.toLowerCase()) ? 1 : 0.3;

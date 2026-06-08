@@ -15,6 +15,7 @@ import { Star, Plus, Clipboard, CheckCircle, Eye } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { Review, ReviewCycle } from '@/types/peoplecore';
 import { Avatar } from '@/components/ui/Avatar';
+import { RatingSlider } from '@/components/ui/RatingSlider';
 
 export default function ReviewsPage() {
   const { session, loading } = useAuth();
@@ -323,22 +324,7 @@ export default function ReviewsPage() {
             {isEditing ? (
               // Fill-in Form (For reviewer)
               <div className="space-y-4">
-                <div>
-                  <label className="form-label mb-2">Overall Rating: {overallRating} / 5</label>
-                  <div className="flex gap-1.5 mt-1.5">
-                    {[1, 2, 3, 4, 5].map((val) => (
-                      <button
-                        key={val}
-                        onClick={() => setOverallRating(val)}
-                        className="p-1 rounded-md hover:bg-[color:var(--muted)] transition-colors text-2xl"
-                      >
-                        <span style={{ color: val <= overallRating ? 'var(--warning)' : 'var(--border)' }}>
-                          ★
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <RatingSlider label="Overall Rating" value={overallRating} onChange={setOverallRating} />
 
                 <Textarea
                   label="Strengths"
