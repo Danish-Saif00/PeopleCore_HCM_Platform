@@ -31,27 +31,38 @@ function clone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
 }
 
+function sharedState<T>(key: string, initialValue: T): T {
+  const globalStore = globalThis as typeof globalThis & {
+    __peoplecoreMockState?: Record<string, unknown>;
+  };
+  globalStore.__peoplecoreMockState ??= {};
+  if (!(key in globalStore.__peoplecoreMockState)) {
+    globalStore.__peoplecoreMockState[key] = initialValue;
+  }
+  return globalStore.__peoplecoreMockState[key] as T;
+}
+
 // ============================================================
 // Mutable State
 // ============================================================
 
-const companies: Company[] = [clone(seed.company)];
-const departments: Department[] = clone(seed.departments);
-const employees: Employee[] = clone(seed.employees);
-const authUsers: AuthUser[] = clone(seed.authUsers);
-const payrollRuns: PayrollRun[] = clone(seed.payrollRuns);
-const payslips: Payslip[] = clone(seed.payslips);
-const timeOffPolicy: TimeOffPolicy = clone(seed.timeOffPolicy);
-const timeOffRequests: TimeOffRequest[] = clone(seed.timeOffRequests);
-const onboardingTemplates: OnboardingTemplate[] = clone(seed.onboardingTemplates);
-const onboardingTasks: OnboardingTask[] = clone(seed.onboardingTasks);
-const employeeOnboardings: EmployeeOnboarding[] = clone(seed.employeeOnboardings);
-const reviewCycles: ReviewCycle[] = clone(seed.reviewCycles);
-const reviews: Review[] = clone(seed.reviews);
-let notifications: Notification[] = clone(seed.notifications);
-const emailEvents: EmailEvent[] = clone(seed.emailEvents);
-const pendingSignups: PendingSignup[] = [];
-const invites: MockInvite[] = [];
+const companies = sharedState<Company[]>("companies", [clone(seed.company)]);
+const departments = sharedState<Department[]>("departments", clone(seed.departments));
+const employees = sharedState<Employee[]>("employees", clone(seed.employees));
+const authUsers = sharedState<AuthUser[]>("authUsers", clone(seed.authUsers));
+const payrollRuns = sharedState<PayrollRun[]>("payrollRuns", clone(seed.payrollRuns));
+const payslips = sharedState<Payslip[]>("payslips", clone(seed.payslips));
+const timeOffPolicy = sharedState<TimeOffPolicy>("timeOffPolicy", clone(seed.timeOffPolicy));
+const timeOffRequests = sharedState<TimeOffRequest[]>("timeOffRequests", clone(seed.timeOffRequests));
+const onboardingTemplates = sharedState<OnboardingTemplate[]>("onboardingTemplates", clone(seed.onboardingTemplates));
+const onboardingTasks = sharedState<OnboardingTask[]>("onboardingTasks", clone(seed.onboardingTasks));
+const employeeOnboardings = sharedState<EmployeeOnboarding[]>("employeeOnboardings", clone(seed.employeeOnboardings));
+const reviewCycles = sharedState<ReviewCycle[]>("reviewCycles", clone(seed.reviewCycles));
+const reviews = sharedState<Review[]>("reviews", clone(seed.reviews));
+const notifications = sharedState<Notification[]>("notifications", clone(seed.notifications));
+const emailEvents = sharedState<EmailEvent[]>("emailEvents", clone(seed.emailEvents));
+const pendingSignups = sharedState<PendingSignup[]>("pendingSignups", []);
+const invites = sharedState<MockInvite[]>("invites", []);
 
 // ============================================================
 // ID Generator
@@ -272,9 +283,9 @@ export const db = {
     return notif;
   },
   markAllNotificationsRead: (userId: string) => {
-    notifications = notifications.map((n) =>
-      n.userId === userId ? { ...n, read: true } : n
-    );
+    notifications.forEach((notification) => {
+      if (notification.userId === userId) notification.read = true;
+    });
   },
   markNotificationRead: (id: string) => {
     const idx = notifications.findIndex((n) => n.id === id);

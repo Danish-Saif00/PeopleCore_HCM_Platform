@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
-import { getPayslipsForEmployee, getPayslipsByRun } from '@/lib/payroll';
+import { getPayslipsForEmployee, getPayslipsByRun, getAllIssuedPayslips } from '@/lib/payroll';
 import { db } from '@/data/mock-db';
 
 export async function GET(req: NextRequest) {
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, data: slips });
   }
 
-  const slips = db.getPayslips().map((s) => ({
+  const slips = getAllIssuedPayslips().map((s) => ({
     ...s,
     employee: db.getEmployeeById(s.employeeId),
   }));

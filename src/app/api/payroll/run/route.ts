@@ -9,5 +9,5 @@ export async function POST(req: NextRequest) {
   }
   const { period, dateFrom, dateTo } = await req.json();
   const result = runPayroll({ period, dateFrom, dateTo });
-  return NextResponse.json(result);
+  return NextResponse.json(result, { status: result.success ? 200 : 400 });
 }
