@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src/assets/peoplecore_logo_kit/peoplecore-logo-light-horizontal-long.png" alt="PeopleCore logo" width="360" />
+  <img src="src/assets/peoplecore_logo_kit/peoplecore-logo-dark-horizontal-long.png" alt="PeopleCore logo" width="360" />
 </p>
 
 <h1 align="center">PeopleCore HCM</h1>
